@@ -56,8 +56,17 @@ export const fr: Translations = {
     editingId: 'Modification de la catégorie : {id}',
   },
   settings: {
-    title: 'Paramètres',
-    message: 'Les préférences de thème, de langue et de devise seront ici.',
+    themeTitle: 'Thème',
+    themeSystem: 'Système',
+    themeLight: 'Clair',
+    themeDark: 'Sombre',
+    themeHint: "Système suit le réglage clair ou sombre de votre téléphone.",
+    languageTitle: 'Langue',
+    currencyTitle: 'Devise',
+    currencyHint:
+      'Les nouvelles transactions et les nouveaux budgets utilisent cette devise. Les totaux ne comptent que les enregistrements dans la devise choisie.',
+    appInfoTitle: 'Application',
+    appVersion: 'Version {version}',
   },
   about: {
     description:

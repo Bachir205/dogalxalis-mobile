@@ -3,6 +3,12 @@ import { fr } from './fr';
 
 export type Language = 'en' | 'fr';
 
+export const LANGUAGES: readonly Language[] = ['en', 'fr'];
+
+export function isLanguage(value: unknown): value is Language {
+  return value === 'en' || value === 'fr';
+}
+
 export const dictionaries: Record<Language, Translations> = { en, fr };
 
 /** Union of every valid dotted key, e.g. 'foundation.title'. */

@@ -1,17 +1,15 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 
 import { translate, type Language, type TranslationKey, type TranslationParams } from '@/i18n';
-import { detectDeviceLanguage } from '@/i18n/device';
 
-/**
- * Phase 1: language = device language.
- * Phase 3 reads it from PreferencesContext so the user can switch FR/EN in Settings.
- */
+import { usePreferences } from './usePreferences';
+
+/** Translation function for the language chosen in Settings (changes live, app-wide). */
 export function useI18n() {
-  const language: Language = useMemo(() => detectDeviceLanguage(), []);
+  const { language } = usePreferences();
   const t = useCallback(
     (key: TranslationKey, params?: TranslationParams) => translate(language, key, params),
     [language],
   );
-  return { language, t };
+  return { language: language as Language, t };
 }

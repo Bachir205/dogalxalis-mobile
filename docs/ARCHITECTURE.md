@@ -40,17 +40,22 @@ src/app/_layout.tsx                 providers + root Stack
 
 ## Contexts
 
-| Context | State | Persistence |
-|---|---|---|
-| ThemeContext | mode (light/dark/system), resolved scheme | AsyncStorage |
-| PreferencesContext | language (fr/en), currency, dashboard period | AsyncStorage |
-| CategoriesContext | categories, status, error | SQLite (+ API) |
-| TransactionsContext | transactions, status, error (useReducer) | SQLite (+ API) |
-| BudgetsContext | budgets, selectedMonth, status, error (useReducer) | SQLite (+ API) |
+| Context | State | Persistence | Status |
+|---|---|---|---|
+| ThemeContext | mode (light/dark/system), resolved scheme, isReady | AsyncStorage | Implemented (Phase 3) |
+| PreferencesContext | language (fr/en), currency (XOF/EUR/USD), isReady | AsyncStorage | Implemented (Phase 3) |
+| TransactionsContext | transactions, status, error (useReducer) | in memory now; SQLite in Phase 4, API in Phase 6 | State and actions implemented, persistence planned |
+| BudgetsContext | budgets, selectedMonth, status, error (useReducer) | in memory now; SQLite in Phase 5 | State and actions implemented, rules and calculations planned |
+| CategoriesContext | categories, status, error | SQLite (+ API) | Planned (Phase 4, needs the database and seeds) |
 
-Provider order: `Theme > Preferences > DatabaseGate > Categories > Transactions > Budgets`.
+Provider order (`src/contexts/AppProviders.tsx`): `Theme > Preferences > Transactions > Budgets`.
+Phase 4 inserts the database gate and CategoriesProvider before Transactions.
+`AppGate` keeps the splash screen visible until the saved theme and language are loaded, so the app never
+flashes the wrong theme or language. Hooks (`useTheme`, `usePreferences`, `useTransactions`, `useBudgets`)
+fail with a clear message when used outside their provider.
 Budget spent / remaining are never stored: `computeBudgetSummaries(budgets, transactions, month)`
-(pure function) is wrapped in `useMemo`.
+(pure function, Phase 5) is wrapped in `useMemo`.
+The dashboard period toggle ("This month / All time") is local screen state (`useState`), decided in Phase 4.
 
 ## Hooks
 

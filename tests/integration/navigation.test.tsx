@@ -1,22 +1,30 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fireEvent, renderRouter, screen } from 'expo-router/testing-library';
+
+import { STORAGE_KEYS } from '@/constants/storageKeys';
+
+import { flushPromises } from '../setup/helpers';
 
 // The real drawer needs native animation: swap it for a plain stub (see the file header).
 jest.mock('react-native-drawer-layout', () => require('../setup/drawerLayoutMock'));
 
-// Force English so the assertions do not depend on the machine's language.
-jest.mock('@/i18n/device', () => ({ detectDeviceLanguage: () => 'en' }));
-
 const APP_DIR = 'src/app';
+
+/** Renders the app and lets the saved theme/language load (the splash gate opens after that). */
+async function startApp(initialUrl?: string) {
+  await renderRouter(APP_DIR, initialUrl ? { initialUrl } : undefined);
+  await flushPromises();
+}
 
 describe('navigation: tabs, drawer and stack', () => {
   it('opens on Home at "/"', async () => {
-    await renderRouter(APP_DIR);
+    await startApp();
     expect(screen).toHavePathname('/');
     expect(await screen.findByText(/Totals, recent transactions/)).toBeOnTheScreen();
   });
 
   it('switches between the four bottom tabs', async () => {
-    await renderRouter(APP_DIR);
+    await startApp();
 
     await fireEvent.press(screen.getByText('Transactions'));
     expect(screen).toHavePathname('/transactions');
@@ -32,7 +40,7 @@ describe('navigation: tabs, drawer and stack', () => {
   });
 
   it('opens the drawer and reaches Categories, About and back to Dashboard', async () => {
-    await renderRouter(APP_DIR);
+    await startApp();
 
     await fireEvent.press(screen.getByLabelText('Open menu'));
     await fireEvent.press(screen.getByText('Categories'));
@@ -49,7 +57,7 @@ describe('navigation: tabs, drawer and stack', () => {
   });
 
   it('opens the new-transaction modal from the Home floating button', async () => {
-    await renderRouter(APP_DIR);
+    await startApp();
 
     await fireEvent.press(screen.getByLabelText('Add transaction'));
     expect(screen).toHavePathname('/transactions/new');
@@ -57,7 +65,7 @@ describe('navigation: tabs, drawer and stack', () => {
   });
 
   it('goes from the Transactions tab to details and edit with a route parameter', async () => {
-    await renderRouter(APP_DIR, { initialUrl: '/transactions' });
+    await startApp('/transactions');
 
     await fireEvent.press(screen.getByText('Open a sample transaction (navigation test)'));
     expect(screen).toHavePathname('/transactions/sample');
@@ -68,13 +76,38 @@ describe('navigation: tabs, drawer and stack', () => {
   });
 
   it('opens the budget form from the Budgets tab', async () => {
-    await renderRouter(APP_DIR, { initialUrl: '/budgets' });
+    await startApp('/budgets');
     await fireEvent.press(screen.getByText('Add budget'));
     expect(screen).toHavePathname('/budgets/form');
   });
 
   it('opens the category form in edit mode when an id is given', async () => {
-    await renderRouter(APP_DIR, { initialUrl: '/categories/form?id=cat_food' });
+    await startApp('/categories/form?id=cat_food');
     expect(await screen.findByText('Editing category: cat_food')).toBeOnTheScreen();
+  });
+
+  it('switches the whole app to French from Settings and remembers it', async () => {
+    await startApp('/settings');
+    expect(screen.getByLabelText('Light')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByLabelText('Français'));
+    // Tab label, section titles and options are now French, everywhere at once.
+    expect(await screen.findByText('Thème')).toBeOnTheScreen();
+    expect(screen.getAllByText('Paramètres').length).toBeGreaterThan(0);
+    expect(screen.getByLabelText('Clair')).toBeOnTheScreen();
+    await flushPromises();
+    expect(JSON.parse((await AsyncStorage.getItem(STORAGE_KEYS.preferences)) ?? '{}').language).toBe(
+      'fr',
+    );
+  });
+
+  it('changes and saves the theme mode from Settings', async () => {
+    await startApp('/settings');
+    expect(screen.getByLabelText('System')).toBeSelected();
+
+    await fireEvent.press(screen.getByLabelText('Dark'));
+    expect(screen.getByLabelText('Dark')).toBeSelected();
+    await flushPromises();
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.themeMode)).toBe('"dark"');
   });
 });

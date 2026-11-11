@@ -8,6 +8,7 @@ module.exports = {
   },
   // The first run after install compiles many files, which can exceed Jest's default 5 s.
   testTimeout: 60000,
+  setupFilesAfterEnv: ['<rootDir>/tests/setup/jest.setup.ts'],
   testMatch: ['<rootDir>/tests/**/*.test.ts?(x)'],
   // [\\/] accepts both / and \ so the pattern also works on Windows paths.
   transformIgnorePatterns: [

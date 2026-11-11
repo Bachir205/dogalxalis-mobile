@@ -54,8 +54,17 @@ export const en = {
     editingId: 'Editing category: {id}',
   },
   settings: {
-    title: 'Settings',
-    message: 'Theme, language and currency preferences will be here.',
+    themeTitle: 'Theme',
+    themeSystem: 'System',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    themeHint: "System follows your phone's light or dark setting.",
+    languageTitle: 'Language',
+    currencyTitle: 'Currency',
+    currencyHint:
+      'New transactions and budgets use this currency. Totals only include records in the selected currency.',
+    appInfoTitle: 'Application',
+    appVersion: 'Version {version}',
   },
   about: {
     description:

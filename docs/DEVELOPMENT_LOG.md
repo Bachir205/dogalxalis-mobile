@@ -30,4 +30,19 @@ Device test: confirmed working in Expo Go by the developer.
 
 Verified in a sandbox (no device): `tsc --noEmit` passes, Android bundle builds, 7 automated navigation tests pass
 (`tests/integration/navigation.test.tsx`, see `TEST_PLAN.md`).
-**Not yet tested:** drawer swipe/slide animation and Android Back on the physical device (the drawer is replaced by a stub in Jest).
+Device test: the app runs in Expo Go. **Not yet confirmed:** the full manual checklist in `TEST_PLAN.md` (drawer swipe, Android Back).
+
+## 2026-11-11, Phase 3 (contexts and themes)
+- `ThemeContext` (Light / Dark / System, persisted), `PreferencesContext` (language, currency, persisted),
+  `TransactionsContext` and `BudgetsContext` with pure reducers and in-memory state (persistence comes in Phases 4 to 6).
+- `useTheme` now reads the context; `useI18n` reads the language chosen in Settings (live, app-wide).
+- Real Settings screen (theme, language, currency, app info) with a reusable `SegmentedControl`.
+- `AppGate` + splash screen: the app opens only after the saved theme and language are read.
+- New dependencies: `@react-native-async-storage/async-storage`, `expo-crypto` (installed with `npx expo install`).
+- Jest: `jest.config.js` now has `setupFilesAfterEnv` (mocks for AsyncStorage, expo-crypto, expo-splash-screen, device language).
+- Lessons: with `@testing-library/react-native` 14, `unmount` must be awaited; expo-router's test renderer uses fake
+  timers, so helpers must not wait on `setTimeout`.
+
+Verified in a sandbox (no device): `tsc --noEmit` passes, Android bundle builds, 41 automated tests pass
+(unit: dates, reducers, i18n; integration: contexts, navigation, Settings flows).
+**Not yet tested:** Phase 3 on the physical phone (theme and language switch, persistence after closing the app).
