@@ -1,0 +1,75 @@
+# Database schema (SQLite, expo-sqlite)
+
+Status: **designed, not implemented** (Phase 4 / 5).
+Money is stored as integer minor units (XOF 0 decimals, EUR/USD 2). `occurred_at` is a local
+calendar date `YYYY-MM-DD`; `created_at` / `updated_at` / `deleted_at` are ISO UTC timestamps.
+Migrations use `PRAGMA user_version`; migration 1 creates the tables and seeds default categories
+with fixed ids (`cat_food`, ...).
+
+```sql
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE categories (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('income','expense')),
+  icon TEXT NOT NULL,
+  color TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  sync_status TEXT NOT NULL DEFAULT 'pending' CHECK (sync_status IN ('synced','pending','failed'))
+);
+CREATE UNIQUE INDEX ux_cat_name_type ON categories(name COLLATE NOCASE, type);
+
+CREATE TABLE transactions (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL CHECK (length(trim(title)) BETWEEN 1 AND 60),
+  amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+  currency TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('income','expense')),
+  category_id TEXT NOT NULL REFERENCES categories(id),
+  description TEXT,
+  occurred_at TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  sync_status TEXT NOT NULL DEFAULT 'pending' CHECK (sync_status IN ('synced','pending','failed'))
+);
+CREATE INDEX idx_tx_date ON transactions(occurred_at);
+CREATE INDEX idx_tx_category ON transactions(category_id);
+CREATE INDEX idx_tx_unsynced ON transactions(sync_status) WHERE sync_status <> 'synced';
+
+CREATE TABLE budgets (
+  id TEXT PRIMARY KEY,
+  category_id TEXT NOT NULL REFERENCES categories(id),
+  amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+  currency TEXT NOT NULL,
+  month TEXT NOT NULL CHECK (month GLOB '[0-9][0-9][0-9][0-9]-[01][0-9]'),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  sync_status TEXT NOT NULL DEFAULT 'pending' CHECK (sync_status IN ('synced','pending','failed'))
+);
+CREATE UNIQUE INDEX ux_budget_cat_month_cur
+  ON budgets(category_id, month, currency) WHERE deleted_at IS NULL;
+```
+
+Deviations from the original brief: `budgets` gets `deleted_at` and `sync_status` (same sync strategy
+as transactions) and its uniqueness is a **partial** unique index so a soft-deleted budget does not
+block re-creating the same category and month. `categories` gets `sync_status` (create/edit from v1).
+
+## Rules
+
+- A transaction's category type must equal its type (enforced in Zod and tests).
+- A category's type cannot change after creation; categories cannot be deleted in v1.
+- Deleting a never-synced row hard-deletes it; deleting a synced row sets `deleted_at` + `pending`.
+  All reads exclude `deleted_at IS NOT NULL`.
+
+## Budget calculations (single implementation in `src/utils/budgetCalculations.ts`)
+
+- Spent = sum of `amount_minor` of transactions with type `expense`, same category, same currency,
+  `occurred_at` in the budget month, not deleted.
+- Remaining = limit - spent (may be negative). Exceeded = max(0, spent - limit).
+- Progress = spent / limit x 100 (limit 0 returns 0). Displayed value is floored; the bar is capped at 100%.
+- Status uses integer comparison: `spent*100 < limit*80` normal; `< limit*100` approaching;
+  `== limit*100` reached; above that exceeded.
