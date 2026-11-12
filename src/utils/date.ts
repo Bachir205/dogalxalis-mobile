@@ -21,3 +21,20 @@ export function shiftMonth(month: string, delta: number): string {
   const index = year * 12 + (monthNumber - 1) + delta;
   return `${Math.floor(index / 12)}-${pad((index % 12) + 1)}`;
 }
+
+/** True for a real calendar date written YYYY-MM-DD (rejects 2026-02-30, 2026-13-01, ...). */
+export function isValidDate(value: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+  const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  if (year < 1900 || year > 2200) return false;
+  const date = new Date(year, month - 1, day);
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+}
+
+/** Moves a YYYY-MM-DD date by `deltaDays` days (negative = back). */
+export function shiftDate(value: string, deltaDays: number): string {
+  if (!isValidDate(value)) throw new Error(`Invalid date: ${value}`);
+  const [year, month, day] = value.split('-').map(Number);
+  return getToday(new Date(year, month - 1, day + deltaDays));
+}

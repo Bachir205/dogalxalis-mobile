@@ -54,3 +54,6 @@ export type NewTransactionInput = Pick<
 
 /** The fields a user supplies when creating a budget. */
 export type NewBudgetInput = Pick<Budget, 'categoryId' | 'amountMinor' | 'currency' | 'month'>;
+
+/** The fields a user supplies when creating a category. */
+export type NewCategoryInput = Pick<Category, 'name' | 'type' | 'icon' | 'color'>;

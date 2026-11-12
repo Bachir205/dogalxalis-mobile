@@ -1,19 +1,26 @@
-import { useLocalSearchParams } from 'expo-router';
-import { Pencil } from 'lucide-react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ReceiptText } from 'lucide-react-native';
 
-import { ShellScreen } from '@/components/ui';
+import { EmptyState, ScreenContainer } from '@/components/ui';
+import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { useI18n } from '@/hooks/useI18n';
+import { useTransactions } from '@/hooks/useTransactions';
 
-/** Edit transaction (modal). Form arrives in Phase 4. */
+/** Edit transaction (modal). */
 export default function EditTransactionScreen() {
   const { t } = useI18n();
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { transactions } = useTransactions();
+  const transaction = transactions.find((item) => item.id === id);
 
   return (
-    <ShellScreen
-      icon={Pencil}
-      title={t('nav.editTransaction')}
-      message={`${t('transactions.detailId', { id })} ${t('transactions.formMessage')}`}
-    />
+    <ScreenContainer scroll>
+      {transaction ? (
+        <TransactionForm transaction={transaction} onSaved={() => router.back()} />
+      ) : (
+        <EmptyState icon={ReceiptText} title={t('transactions.notFoundTitle')} message={t('errors.notFound')} />
+      )}
+    </ScreenContainer>
   );
 }

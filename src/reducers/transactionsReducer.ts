@@ -15,10 +15,10 @@ export type TransactionsAction =
   | { type: 'REMOVED'; id: string }
   | { type: 'SYNC_STATUS_SET'; id: string; syncStatus: SyncStatus };
 
-/** Phase 3: nothing is loaded from a database yet, so the list starts empty and ready. */
+/** Starts idle: the provider loads the saved transactions from SQLite right after mounting. */
 export const initialTransactionsState: TransactionsState = {
   items: [],
-  status: 'ready',
+  status: 'idle',
   error: null,
 };
 

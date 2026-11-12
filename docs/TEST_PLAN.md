@@ -55,6 +55,40 @@ Manual on the Android phone (Manual-pending):
 | T5 | Close and reopen after changing language and currency | Choices are kept |
 | T6 | Settings > Currency | Choice changes and is kept (it is used by transactions from Phase 4) |
 
+## Database, transactions, categories and dashboard (Phase 4)
+
+Automated (`npm test`): 105 tests in total, 11 suites.
+
+| # | Case | Status |
+|---|---|---|
+| D-a | Migrations: schema, 13 seeded categories, `user_version = 1`, safe to run twice | Automated-pass |
+| D-b | Database constraints: amount > 0, valid type, foreign keys, unique category name per type (any case) | Automated-pass |
+| D-c | Repositories: insert / read newest first / update only given fields / soft delete hidden but kept; category must exist and match the type | Automated-pass |
+| D-d | Budgets table: one active budget per category + month + currency; deleted budget can be re-created; bad month / zero limit rejected | Automated-pass |
+| D-e | Money: parsing (no float errors, decimals per currency, rejects bad input, caps), formatting FR/EN, round trip | Automated-pass |
+| D-f | Calculations: totals per currency and month, net can be negative, category spending order, sorting; recalculation after edit / delete | Automated-pass |
+| D-g | Filters: search (case and accent insensitive), type, category, month, combined | Automated-pass |
+| D-h | Validation: title, amount, category rules, date, description; every error message exists in FR and EN | Automated-pass |
+| D-i | Contexts on SQLite: add / update / remove, wrong category type refused with state untouched, data survives restart | Automated-pass |
+| D-j | Flows on the real screens: add expense (list, dashboard, database), validation errors, type switch resets category, restart, edit, delete with confirmation, search and filters, dashboard period and currency, categories add / duplicate / edit | Automated-pass |
+
+Manual on the Android phone (Manual-pending):
+
+| # | Case | Expected |
+|---|---|---|
+| D1 | Add an expense (FCFA 2500, Food), then force-close the app (swipe it away) and reopen | Transaction still there; dashboard totals unchanged |
+| D2 | Add income and expense; compare Income, Expenses and Net with a hand calculation | Net = income - expenses |
+| D3 | Edit the amount and the category of a transaction | List, detail and dashboard update |
+| D4 | Delete a transaction (cancel once, then confirm) | Cancel keeps it; confirm removes it everywhere |
+| D5 | Search "dejeuner" with a transaction titled "Déjeuner"; filter by type, category and month | Accent-insensitive match; filters combine |
+| D6 | Dashboard "This month" vs "All time" with a transaction dated last month | Totals differ as expected |
+| D7 | Settings: switch currency to EUR and back; add a EUR transaction | Totals only count the active currency; EUR amounts show cents |
+| D8 | Open the amount field | Numeric keyboard; Save button reachable when the keyboard is open |
+| D9 | Categories: add "Gifts" with an icon, edit "Food" (rename, color), try a duplicate name | Saved; duplicate refused with a message; type cannot be changed |
+| D10 | Language Francais: dashboard, forms, errors, category names (Alimentation...) | Everything in French; renamed categories keep the typed name |
+| D11 | Dark mode on dashboard, list, forms, categories | Readable, no white areas |
+| D12 | Airplane mode on and off while using the app | Everything works (no network is used yet) |
+
 ## Later phases
 
-Money utilities, budget calculations, filters, reducers, repositories, API and sync tests: Planned (Phases 4 to 8).
+Budget repository and calculations (Phase 5), API and sync (Phase 6), final integration (Phase 7): Planned.

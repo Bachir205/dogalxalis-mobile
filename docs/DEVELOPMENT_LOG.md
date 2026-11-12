@@ -45,4 +45,27 @@ Device test: the app runs in Expo Go. **Not yet confirmed:** the full manual che
 
 Verified in a sandbox (no device): `tsc --noEmit` passes, Android bundle builds, 41 automated tests pass
 (unit: dates, reducers, i18n; integration: contexts, navigation, Settings flows).
-**Not yet tested:** Phase 3 on the physical phone (theme and language switch, persistence after closing the app).
+Developer moved on to Phase 4 after Phase 3; the manual checklist T1 to T6 (see `TEST_PLAN.md`) was not reported.
+
+## 2026-11-11, Phase 4 (SQLite, categories, transactions, dashboard)
+- Database: `Db` interface, schema v1 (categories, transactions, budgets), migrations with `PRAGMA user_version`,
+  13 seeded default categories (fixed ids), `getDatabase()` singleton, `DatabaseProvider` (spinner / error + retry).
+- Repositories for categories and transactions (parameterized SQL only). Business rules enforced in the repository
+  (`DataError`) and by the database (foreign keys, CHECK, unique indexes). Deleting is a soft delete.
+- Money utilities (integer minor units, string parsing, per-language formatting), date helpers, calculation and filter
+  functions (pure, tested), Zod schemas (messages are translation keys), `getCategoryName` (seeded names are translated).
+- Contexts: `CategoriesContext` (new), `TransactionsContext` now reads/writes SQLite, `useCategories`, `useDatabase`.
+- Screens: dashboard (period toggle, income / expenses / net / count, spending by category, recent transactions),
+  transactions list (search, type / category / month filters), transaction form (create and edit, React Hook Form + Zod),
+  details with Edit and Delete (confirmation), categories list and form (create and edit, type locked after creation).
+- New components: AppInput, Chip, MonthSwitcher, LoadingState, ErrorState, CategoryBadge, CategorySelector,
+  TransactionCard, SummaryCard, TransactionForm, CategoryForm, confirmAction.
+- New dependencies: `expo-sqlite` (npx expo install), `zod`, `react-hook-form`, `@hookform/resolvers` (npm),
+  dev: `sql.js`, `@types/sql.js`.
+- Budget overview on the dashboard is a placeholder until Phase 5.
+
+Verified in a sandbox (no device): `tsc --noEmit` passes, Android bundle builds, 105 automated tests pass in
+11 suites (unit: money, dates, calculations, filters, validation, reducers, i18n; integration: migrations and repositories on
+real SQLite, contexts, navigation, end-to-end flows on the real screens).
+**Not yet tested:** the real SQLite file on the phone, persistence after force-closing the app, keyboard behaviour in
+forms, accent-insensitive search on Hermes, dark mode appearance of the new screens (manual checklist D1 to D12).

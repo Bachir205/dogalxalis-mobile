@@ -1,16 +1,14 @@
-import { FilePlus } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 
-import { ShellScreen } from '@/components/ui';
-import { useI18n } from '@/hooks/useI18n';
+import { ScreenContainer } from '@/components/ui';
+import { TransactionForm } from '@/components/transactions/TransactionForm';
 
-/** New transaction (modal). Form arrives in Phase 4. */
+/** New transaction (modal). */
 export default function NewTransactionScreen() {
-  const { t } = useI18n();
+  const router = useRouter();
   return (
-    <ShellScreen
-      icon={FilePlus}
-      title={t('nav.newTransaction')}
-      message={t('transactions.formMessage')}
-    />
+    <ScreenContainer scroll>
+      <TransactionForm onSaved={() => router.back()} />
+    </ScreenContainer>
   );
 }

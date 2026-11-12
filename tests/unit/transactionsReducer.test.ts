@@ -21,8 +21,8 @@ const make = (id: string, overrides: Partial<Transaction> = {}): Transaction => 
 });
 
 describe('transactionsReducer', () => {
-  it('starts empty and ready', () => {
-    expect(initialTransactionsState).toEqual({ items: [], status: 'ready', error: null });
+  it('starts empty and idle (the provider loads the saved data right after mounting)', () => {
+    expect(initialTransactionsState).toEqual({ items: [], status: 'idle', error: null });
   });
 
   it('handles the load lifecycle', () => {

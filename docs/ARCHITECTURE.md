@@ -9,7 +9,7 @@ UI (src/app routes + src/components)          presentation only
         | useTheme / useI18n / useCategories / useTransactions / useBudgets
 Contexts + reducers (src/contexts, src/reducers)   state + orchestration
         |
-Services (src/services: api client, sync)    Repositories (src/database/repositories: all SQL)
+Services (src/services: storage now; api client and sync in Phase 6)    Repositories (src/database/repositories: all SQL)
         |
 Pure utils (src/utils: money, date, budgetCalculations, filters)   no React, no I/O, unit-tested
 ```
@@ -44,18 +44,29 @@ src/app/_layout.tsx                 providers + root Stack
 |---|---|---|---|
 | ThemeContext | mode (light/dark/system), resolved scheme, isReady | AsyncStorage | Implemented (Phase 3) |
 | PreferencesContext | language (fr/en), currency (XOF/EUR/USD), isReady | AsyncStorage | Implemented (Phase 3) |
-| TransactionsContext | transactions, status, error (useReducer) | in memory now; SQLite in Phase 4, API in Phase 6 | State and actions implemented, persistence planned |
-| BudgetsContext | budgets, selectedMonth, status, error (useReducer) | in memory now; SQLite in Phase 5 | State and actions implemented, rules and calculations planned |
-| CategoriesContext | categories, status, error | SQLite (+ API) | Planned (Phase 4, needs the database and seeds) |
+| DatabaseContext | the open SQLite database; loading and error screens | SQLite file `dogalxalis.db` | Implemented (Phase 4) |
+| CategoriesContext | categories, status, error (useReducer) | SQLite | Implemented (Phase 4); API in Phase 6 |
+| TransactionsContext | transactions, status, error (useReducer) | SQLite | Implemented (Phase 4); API in Phase 6 |
+| BudgetsContext | budgets, selectedMonth, status, error (useReducer) | in memory now; SQLite in Phase 5 | State and actions only |
 
-Provider order (`src/contexts/AppProviders.tsx`): `Theme > Preferences > Transactions > Budgets`.
-Phase 4 inserts the database gate and CategoriesProvider before Transactions.
-`AppGate` keeps the splash screen visible until the saved theme and language are loaded, so the app never
-flashes the wrong theme or language. Hooks (`useTheme`, `usePreferences`, `useTransactions`, `useBudgets`)
-fail with a clear message when used outside their provider.
+Provider order (`src/contexts/AppProviders.tsx`): `Theme > Preferences > Database > Categories > Transactions > Budgets`.
+`AppGate` keeps the splash screen visible until the saved theme and language are loaded. `DatabaseProvider` opens
+SQLite and runs the migrations before anything that needs data is rendered (spinner while it opens, error screen with
+"Try again" if it fails).
+
+Write path (database first, screen second): form -> Zod validation -> context action -> repository (SQL) ->
+only if that succeeded, `dispatch` updates the screen state. If the repository throws (for example a category of
+the wrong type), the state is untouched and the form shows an error.
+
+Read path: on mount each provider loads from its repository (`useEffect`), then screens derive values with `useMemo`
+from pure functions in `src/utils` (`computeTotals`, `computeCategorySpending`, `filterTransactions`,
+`sortTransactions`). There is one implementation of every financial formula.
+
+Money: integer minor units everywhere (`src/utils/money.ts`): `parseAmountInput` uses string arithmetic (never
+`parseFloat * 100`), `formatMinor` formats per language and currency.
+
 Budget spent / remaining are never stored: `computeBudgetSummaries(budgets, transactions, month)`
 (pure function, Phase 5) is wrapped in `useMemo`.
-The dashboard period toggle ("This month / All time") is local screen state (`useState`), decided in Phase 4.
 
 ## Hooks
 
@@ -80,3 +91,10 @@ no NetInfo (offline is detected by failed requests).
 
 Semantic tokens in `src/theme`; components read them through `useTheme()`. Translations are typed
 dictionaries (`src/i18n/en.ts`, `fr.ts`): a key missing in one language is a TypeScript error.
+
+## Testing the database layer
+
+Repositories and migrations take a small `Db` interface (`src/database/types.ts`) that expo-sqlite satisfies.
+In Jest the same SQL runs on sql.js (pure-JavaScript SQLite) through `tests/setup/sqlJsDatabase.ts`, and the
+`expo-sqlite` module is replaced by an in-memory database that survives unmount/remount, so "close and reopen the
+app" is testable. Native-only behaviour (the real SQLite file on the phone) is covered by the manual checklist.

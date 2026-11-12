@@ -1,6 +1,6 @@
 # Database schema (SQLite, expo-sqlite)
 
-Status: **designed, not implemented** (Phase 4 / 5).
+Status: **implemented in Phase 4** (`src/database`). The `budgets` table exists and is tested; its repository arrives in Phase 5.
 Money is stored as integer minor units (XOF 0 decimals, EUR/USD 2). `occurred_at` is a local
 calendar date `YYYY-MM-DD`; `created_at` / `updated_at` / `deleted_at` are ISO UTC timestamps.
 Migrations use `PRAGMA user_version`; migration 1 creates the tables and seeds default categories
@@ -62,8 +62,14 @@ block re-creating the same category and month. `categories` gets `sync_status` (
 
 - A transaction's category type must equal its type (enforced in Zod and tests).
 - A category's type cannot change after creation; categories cannot be deleted in v1.
-- Deleting a never-synced row hard-deletes it; deleting a synced row sets `deleted_at` + `pending`.
-  All reads exclude `deleted_at IS NOT NULL`.
+- Deleting always sets `deleted_at` and `sync_status = 'pending'` (soft delete). The row is only purged after the
+  API confirmed the delete (Phase 6; a 404 on DELETE counts as confirmed). This is simpler and safer than telling
+  "never synced" rows from "edited" rows, which are both `pending`. All reads exclude `deleted_at IS NOT NULL`,
+  so totals and budgets ignore a deleted row immediately.
+- The category rules are enforced in three places: Zod (forms), the repository (`DataError` codes
+  `CATEGORY_NOT_FOUND`, `CATEGORY_TYPE_MISMATCH`, `DUPLICATE`) and the database (foreign keys, CHECK constraints,
+  unique indexes). `PRAGMA foreign_keys = ON` is run on every connection.
+- `occurred_at` is `YYYY-MM-DD`; the month of a transaction is its first 7 characters.
 
 ## Budget calculations (single implementation in `src/utils/budgetCalculations.ts`)
 
