@@ -1,6 +1,6 @@
 # Database schema (SQLite, expo-sqlite)
 
-Status: **implemented in Phase 4** (`src/database`). The `budgets` table exists and is tested; its repository arrives in Phase 5.
+Status: **implemented in Phase 4** (`src/database`). The budgets table and its repository are implemented in Phase 5.
 Money is stored as integer minor units (XOF 0 decimals, EUR/USD 2). `occurred_at` is a local
 calendar date `YYYY-MM-DD`; `created_at` / `updated_at` / `deleted_at` are ISO UTC timestamps.
 Migrations use `PRAGMA user_version`; migration 1 creates the tables and seeds default categories
@@ -70,6 +70,9 @@ block re-creating the same category and month. `categories` gets `sync_status` (
   `CATEGORY_NOT_FOUND`, `CATEGORY_TYPE_MISMATCH`, `DUPLICATE`) and the database (foreign keys, CHECK constraints,
   unique indexes). `PRAGMA foreign_keys = ON` is run on every connection.
 - `occurred_at` is `YYYY-MM-DD`; the month of a transaction is its first 7 characters.
+- Budgets: the category must be an **expense** category (`CATEGORY_TYPE_MISMATCH` otherwise), the month must be a real
+  month (`INVALID_MONTH`; the CHECK only validates the shape `YYYY-MM`, so the repository also rejects `2026-13`),
+  and one active budget per category + month + currency (`DUPLICATE`, from the partial unique index). Deleting is a soft delete.
 
 ## Budget calculations (single implementation in `src/utils/budgetCalculations.ts`)
 

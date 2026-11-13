@@ -7,13 +7,20 @@ import {
   updateCategory,
 } from '@/database/repositories/categoryRepository';
 import {
+  getAllBudgets,
+  getBudgetById,
+  insertBudget,
+  softDeleteBudget,
+  updateBudget,
+} from '@/database/repositories/budgetRepository';
+import {
   getAllTransactions,
   getTransactionById,
   insertTransaction,
   softDeleteTransaction,
   updateTransaction,
 } from '@/database/repositories/transactionRepository';
-import type { Category, Transaction } from '@/types';
+import type { Budget, Category, Transaction } from '@/types';
 
 import { createSqlJsDb, type SqlJsDb } from '../setup/sqlJsDatabase';
 
@@ -210,5 +217,91 @@ describe('budgets table (used from Phase 5)', () => {
         [],
       ),
     ).rejects.toThrow(/CHECK constraint/i);
+  });
+});
+
+describe('budgets repository', () => {
+  const budget = (id: string, overrides: Partial<Budget> = {}): Budget => ({
+    id,
+    categoryId: 'cat_food',
+    amountMinor: 100000,
+    currency: 'XOF',
+    month: '2026-11',
+    createdAt: `2026-11-01T08:00:0${id.length}.000Z`,
+    updatedAt: '2026-11-01T08:00:00.000Z',
+    syncStatus: 'pending',
+    ...overrides,
+  });
+
+  it('inserts and reads back, newest month first', async () => {
+    await insertBudget(db, budget('a', { month: '2026-10' }));
+    await insertBudget(db, budget('bb', { month: '2026-11', categoryId: 'cat_bills' }));
+    expect((await getAllBudgets(db)).map((b) => b.id)).toEqual(['bb', 'a']);
+    expect(await getBudgetById(db, 'a')).toMatchObject({
+      categoryId: 'cat_food',
+      amountMinor: 100000,
+      currency: 'XOF',
+      month: '2026-10',
+    });
+  });
+
+  it('accepts expense categories only, and existing ones', async () => {
+    await expect(insertBudget(db, budget('a', { categoryId: 'cat_salary' }))).rejects.toMatchObject({
+      code: 'CATEGORY_TYPE_MISMATCH',
+    });
+    await expect(insertBudget(db, budget('b', { categoryId: 'nope' }))).rejects.toMatchObject({
+      code: 'CATEGORY_NOT_FOUND',
+    });
+    expect(await getAllBudgets(db)).toEqual([]);
+  });
+
+  it('rejects an impossible month and a zero limit', async () => {
+    await expect(insertBudget(db, budget('a', { month: '2026-13' }))).rejects.toMatchObject({ code: 'INVALID_MONTH' });
+    await expect(insertBudget(db, budget('b', { month: 'nov' }))).rejects.toMatchObject({ code: 'INVALID_MONTH' });
+    await expect(insertBudget(db, budget('c', { amountMinor: 0 }))).rejects.toThrow(/CHECK constraint/i);
+  });
+
+  it('refuses a duplicate for the same category, month and currency, but allows the others', async () => {
+    await insertBudget(db, budget('a'));
+    await expect(insertBudget(db, budget('b'))).rejects.toMatchObject({ code: 'DUPLICATE' });
+    await expect(insertBudget(db, budget('c', { month: '2026-12' }))).resolves.toBeUndefined();
+    await expect(insertBudget(db, budget('d', { categoryId: 'cat_bills' }))).resolves.toBeUndefined();
+    await expect(insertBudget(db, budget('e', { currency: 'EUR' }))).resolves.toBeUndefined();
+  });
+
+  it('updates the limit, category or month, marks the row pending, and re-checks the rules', async () => {
+    await insertBudget(db, budget('a', { syncStatus: 'synced' }));
+    await insertBudget(db, budget('b', { categoryId: 'cat_bills' }));
+
+    await updateBudget(db, 'a', { amountMinor: 80000 }, '2026-11-02T00:00:00.000Z');
+    expect(await getBudgetById(db, 'a')).toMatchObject({
+      amountMinor: 80000,
+      updatedAt: '2026-11-02T00:00:00.000Z',
+      syncStatus: 'pending',
+    });
+
+    await expect(updateBudget(db, 'a', { categoryId: 'cat_bills' }, 'now')).rejects.toMatchObject({ code: 'DUPLICATE' });
+    await expect(updateBudget(db, 'a', { categoryId: 'cat_salary' }, 'now')).rejects.toMatchObject({
+      code: 'CATEGORY_TYPE_MISMATCH',
+    });
+    await expect(updateBudget(db, 'a', { month: '2026-99' }, 'now')).rejects.toMatchObject({ code: 'INVALID_MONTH' });
+    await expect(updateBudget(db, 'zzz', { amountMinor: 1 }, 'now')).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    await expect(updateBudget(db, 'a', { month: '2026-12' }, 'now')).resolves.toBeUndefined();
+  });
+
+  it('soft-deletes: hidden at once, kept until synced, and the slot can be used again', async () => {
+    await insertBudget(db, budget('a'));
+    await softDeleteBudget(db, 'a', '2026-11-12T00:00:00.000Z');
+    expect(await getAllBudgets(db)).toEqual([]);
+    expect(await getBudgetById(db, 'a')).toBeNull();
+
+    const kept = await db.getFirstAsync<{ deleted_at: string; sync_status: string }>(
+      "SELECT deleted_at, sync_status FROM budgets WHERE id = 'a'",
+      [],
+    );
+    expect(kept).toEqual({ deleted_at: '2026-11-12T00:00:00.000Z', sync_status: 'pending' });
+
+    await expect(insertBudget(db, budget('b'))).resolves.toBeUndefined();
+    await expect(softDeleteBudget(db, 'a', 'now')).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 });

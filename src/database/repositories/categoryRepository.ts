@@ -1,6 +1,7 @@
 import type { Category, SyncStatus, TransactionType } from '@/types';
 
 import { DataError } from '../errors';
+import { isUniqueViolation } from '../rules';
 import type { Db, SqlParams } from '../types';
 
 interface CategoryRow {
@@ -38,10 +39,6 @@ export async function getAllCategories(db: Db): Promise<Category[]> {
 export async function getCategoryById(db: Db, id: string): Promise<Category | null> {
   const row = await db.getFirstAsync<CategoryRow>('SELECT * FROM categories WHERE id = ?', [id]);
   return row ? toCategory(row) : null;
-}
-
-function isUniqueViolation(error: unknown): boolean {
-  return error instanceof Error && /UNIQUE constraint failed/i.test(error.message);
 }
 
 export async function insertCategory(db: Db, category: Category): Promise<void> {

@@ -89,6 +89,37 @@ Manual on the Android phone (Manual-pending):
 | D11 | Dark mode on dashboard, list, forms, categories | Readable, no white areas |
 | D12 | Airplane mode on and off while using the app | Everything works (no network is used yet) |
 
+## Budgets (Phase 5)
+
+Automated (`npm test`): 161 tests in total, 13 suites.
+
+| # | Case | Status |
+|---|---|---|
+| B-a | Spent counts only expenses of the budget category, month and currency; month boundaries (1st and last day in, neighbours out); income, other categories and other currencies excluded; deleted transactions excluded | Automated-pass |
+| B-b | Status thresholds are exact: 79.99% normal, 80% approaching, 99.99% approaching, 100% reached, above 100% exceeded; works for limits where 80% is not a whole number; zero limit does not divide by zero | Automated-pass |
+| B-c | Remaining, exceeded amount, real percentage above 100% (150%) with the bar capped; percentage rounded down (99.6% shows 99%); large amounts stay exact | Automated-pass |
+| B-d | Automatic recalculation: create / edit amount / change category / change month / delete / income never counts | Automated-pass |
+| B-e | Summaries per month and currency, most consumed first; totals (allocated, spent, remaining, count) | Automated-pass |
+| B-f | Budget validation (limit > 0, expense category only, valid month, no duplicate, edit does not clash with itself) | Automated-pass |
+| B-g | Budget repository on real SQLite: insert / read / update / soft delete, rules enforced, duplicate and partial unique index, month check | Automated-pass |
+| B-h | Context: create / update / remove in SQLite, rejected duplicate leaves state untouched, live recalculation walkthrough (85%, 100%, 105%, category change, delete), data and figures survive a restart | Automated-pass |
+| B-i | Flows on the real screens: create, expense-only categories, validation errors, duplicate refused, progress after new expenses (85% to 100% to 105%), category change moves spending, only matching transactions counted, edit, delete with confirmation, month navigation, dashboard overview, active currency only, restart | Automated-pass |
+
+Manual on the Android phone (Manual-pending):
+
+| # | Case | Expected |
+|---|---|---|
+| B1 | Create a Food budget of 100 000 FCFA, add Food expenses totalling 65 000 | Card shows 65%, remaining 35 000 FCFA, status Normal |
+| B2 | Add expenses until 80%, then exactly 100%, then above | Status becomes Approaching limit, Budget reached, Budget exceeded; the bar stops at 100% but the percentage and "Exceeded by" keep growing |
+| B3 | Edit an expense (amount, then category, then date to last month) | Both affected budgets update immediately |
+| B4 | Delete an expense | Spending and percentage drop |
+| B5 | Try to create a second Food budget for the same month | Refused with a message |
+| B6 | Month arrows on the Budgets tab | Other months show their own budgets |
+| B7 | Force-close and reopen | Budgets and figures are unchanged |
+| B8 | Dashboard budget overview | Matches the Budgets tab for the current month |
+| B9 | Status is readable without color (icon and text) and in dark mode | Yes |
+| B10 | French labels on all budget screens | Yes |
+
 ## Later phases
 
-Budget repository and calculations (Phase 5), API and sync (Phase 6), final integration (Phase 7): Planned.
+API and sync (Phase 6), final integration (Phase 7), README and GitHub (Phase 8): Planned.

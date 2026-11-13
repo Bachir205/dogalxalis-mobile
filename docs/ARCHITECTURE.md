@@ -47,7 +47,7 @@ src/app/_layout.tsx                 providers + root Stack
 | DatabaseContext | the open SQLite database; loading and error screens | SQLite file `dogalxalis.db` | Implemented (Phase 4) |
 | CategoriesContext | categories, status, error (useReducer) | SQLite | Implemented (Phase 4); API in Phase 6 |
 | TransactionsContext | transactions, status, error (useReducer) | SQLite | Implemented (Phase 4); API in Phase 6 |
-| BudgetsContext | budgets, selectedMonth, status, error (useReducer) | in memory now; SQLite in Phase 5 | State and actions only |
+| BudgetsContext | budgets, selectedMonth, derived summaries and totals, status, error (useReducer) | SQLite | Implemented (Phase 5); API in Phase 6 |
 
 Provider order (`src/contexts/AppProviders.tsx`): `Theme > Preferences > Database > Categories > Transactions > Budgets`.
 `AppGate` keeps the splash screen visible until the saved theme and language are loaded. `DatabaseProvider` opens
@@ -65,8 +65,14 @@ from pure functions in `src/utils` (`computeTotals`, `computeCategorySpending`, 
 Money: integer minor units everywhere (`src/utils/money.ts`): `parseAmountInput` uses string arithmetic (never
 `parseFloat * 100`), `formatMinor` formats per language and currency.
 
-Budget spent / remaining are never stored: `computeBudgetSummaries(budgets, transactions, month)`
-(pure function, Phase 5) is wrapped in `useMemo`.
+Budget spent / remaining / progress are never stored. `computeBudgetSummaries(budgets, transactions, { month, currency })`
+(pure function in `src/utils/budgetCalculations.ts`) is wrapped in `useMemo` inside `BudgetsProvider`, which reads
+`useTransactions()`. Adding, editing or deleting an expense changes the transactions array, so every budget on screen
+recalculates by itself (including when an expense changes category or month: the old and the new budget both update).
+The dashboard uses `useBudgetOverview(currentMonth)`, the same pure functions for any month.
+
+Budget statuses (integer comparisons, no floats): normal below 80%, approaching from 80% up to 100%, reached at exactly 100%,
+exceeded above 100%. The displayed percentage is rounded down and never capped; only the bar is capped at 100%.
 
 ## Hooks
 

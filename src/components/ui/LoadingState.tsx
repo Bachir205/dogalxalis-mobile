@@ -11,6 +11,7 @@ export function LoadingState({ message }: { message?: string }) {
   const { t } = useI18n();
   return (
     <View
+      testID="loading-state"
       accessible
       accessibilityRole="progressbar"
       accessibilityLabel={message ?? t('common.loading')}

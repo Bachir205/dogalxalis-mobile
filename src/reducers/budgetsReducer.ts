@@ -21,7 +21,7 @@ export type BudgetsAction =
   | { type: 'SYNC_STATUS_SET'; id: string; syncStatus: SyncStatus };
 
 export function createInitialBudgetsState(now: Date = new Date()): BudgetsState {
-  return { items: [], selectedMonth: getCurrentMonth(now), status: 'ready', error: null };
+  return { items: [], selectedMonth: getCurrentMonth(now), status: 'idle', error: null };
 }
 
 export function budgetsReducer(state: BudgetsState, action: BudgetsAction): BudgetsState {

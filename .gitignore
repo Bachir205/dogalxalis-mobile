@@ -57,3 +57,4 @@ Thumbs.db
 app-example/
 .docs/
 .vscode/
+.test/

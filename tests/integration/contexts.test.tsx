@@ -7,6 +7,7 @@ import { AppProviders } from '@/contexts/AppProviders';
 import { PreferencesProvider } from '@/contexts/PreferencesContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { DataError } from '@/database/errors';
+import { getAllBudgets } from '@/database/repositories/budgetRepository';
 import { getAllTransactions } from '@/database/repositories/transactionRepository';
 import { useBudgets } from '@/hooks/useBudgets';
 import { useCategories } from '@/hooks/useCategories';
@@ -15,6 +16,7 @@ import { usePreferences } from '@/hooks/usePreferences';
 import { useTheme } from '@/hooks/useTheme';
 import { useTransactions } from '@/hooks/useTransactions';
 import type { NewBudgetInput, NewTransactionInput } from '@/types';
+import { getCurrentMonth, getToday } from '@/utils/date';
 
 import { flushPromises } from '../setup/helpers';
 
@@ -231,7 +233,7 @@ describe('TransactionsContext', () => {
   });
 });
 
-describe('BudgetsContext (in memory until Phase 5)', () => {
+describe('BudgetsContext', () => {
   it('starts on the current month and navigates across a year boundary', async () => {
     const { result } = await renderData();
     expect(result.current.budgets.selectedMonth).toMatch(/^\d{4}-(0[1-9]|1[0-2])$/);
@@ -243,18 +245,105 @@ describe('BudgetsContext (in memory until Phase 5)', () => {
     expect(result.current.budgets.selectedMonth).toBe('2026-01');
   });
 
-  it('creates, updates and removes budgets', async () => {
+  it('creates, updates and removes budgets in SQLite and in state', async () => {
     const { result } = await renderData();
     await act(async () => {
       await result.current.budgets.createBudget(budget);
     });
     expect(result.current.budgets.budgets).toHaveLength(1);
+    expect(await getAllBudgets(result.current.db)).toHaveLength(1);
     const id = result.current.budgets.budgets[0].id;
 
     await act(async () => result.current.budgets.updateBudget(id, { amountMinor: 90000 }));
     expect(result.current.budgets.budgets[0].amountMinor).toBe(90000);
+    expect((await getAllBudgets(result.current.db))[0].amountMinor).toBe(90000);
 
     await act(async () => result.current.budgets.removeBudget(id));
     expect(result.current.budgets.budgets).toEqual([]);
+    expect(await getAllBudgets(result.current.db)).toEqual([]);
+  });
+
+  it('refuses a duplicate or a non-expense category and leaves the state untouched', async () => {
+    const { result } = await renderData();
+    await act(async () => {
+      await result.current.budgets.createBudget(budget);
+    });
+    let duplicate: unknown;
+    let income: unknown;
+    await act(async () => {
+      await result.current.budgets.createBudget(budget).catch((e) => (duplicate = e));
+      await result.current.budgets
+        .createBudget({ ...budget, categoryId: 'cat_salary' })
+        .catch((e) => (income = e));
+    });
+    expect(duplicate).toMatchObject({ code: 'DUPLICATE' });
+    expect(income).toMatchObject({ code: 'CATEGORY_TYPE_MISMATCH' });
+    expect(result.current.budgets.budgets).toHaveLength(1);
+  });
+
+  it('recalculates spent, remaining, progress and status when expenses are added, edited and deleted', async () => {
+    const month = getCurrentMonth();
+    const { result } = await renderData();
+    await act(async () => {
+      await result.current.budgets.createBudget({ ...budget, amountMinor: 10000, month });
+    });
+    const food = () => result.current.budgets.summaries[0];
+    const addFood = async (amountMinor: number) => {
+      await act(async () => {
+        await result.current.tx.addTransaction({ ...expense, amountMinor, date: getToday() });
+      });
+      return result.current.tx.transactions[0].id; // the newest one is first
+    };
+    expect(food()).toMatchObject({ spentMinor: 0, progressPercent: 0, status: 'normal' });
+
+    await addFood(8500);
+    expect(food()).toMatchObject({ spentMinor: 8500, remainingMinor: 1500, progressPercent: 85, status: 'approaching' });
+
+    const second = await addFood(1500);
+    expect(food()).toMatchObject({ spentMinor: 10000, remainingMinor: 0, progressPercent: 100, status: 'reached' });
+
+    const third = await addFood(500);
+    expect(food()).toMatchObject({
+      spentMinor: 10500,
+      remainingMinor: -500,
+      exceededMinor: 500,
+      progressPercent: 105,
+      barPercent: 100,
+      status: 'exceeded',
+    });
+    expect(result.current.budgets.totals).toMatchObject({ allocatedMinor: 10000, spentMinor: 10500, remainingMinor: -500, count: 1 });
+
+    // Changing the category of the last expense takes it out of the Food budget.
+    await act(async () => result.current.tx.updateTransaction(third, { categoryId: 'cat_transport' }));
+    expect(food()).toMatchObject({ spentMinor: 10000, status: 'reached' });
+
+    // Deleting an expense lowers the spending again.
+    await act(async () => result.current.tx.removeTransaction(second));
+    expect(food()).toMatchObject({ spentMinor: 8500, progressPercent: 85, status: 'approaching' });
+
+    // An income in the same category never counts as spending.
+    await act(async () => {
+      await result.current.tx.addTransaction({ ...expense, type: 'income', categoryId: 'cat_salary', amountMinor: 999999, date: getToday() });
+    });
+    expect(food().spentMinor).toBe(8500);
+  });
+
+  it('keeps its budgets, and the figures derived from the transactions, after a restart', async () => {
+    const month = getCurrentMonth();
+    const first = await renderData();
+    await act(async () => {
+      await first.result.current.budgets.createBudget({ ...budget, amountMinor: 10000, month });
+      await first.result.current.tx.addTransaction({ ...expense, amountMinor: 8500, date: getToday() });
+    });
+    expect(first.result.current.budgets.summaries[0]).toMatchObject({ progressPercent: 85, status: 'approaching' });
+    await first.unmount();
+
+    const second = await renderData();
+    await waitFor(() => expect(second.result.current.budgets.status).toBe('ready'));
+    expect(second.result.current.budgets.summaries[0]).toMatchObject({
+      spentMinor: 8500,
+      progressPercent: 85,
+      status: 'approaching',
+    });
   });
 });

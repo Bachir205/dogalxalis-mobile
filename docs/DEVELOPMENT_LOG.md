@@ -67,5 +67,20 @@ Developer moved on to Phase 4 after Phase 3; the manual checklist T1 to T6 (see 
 Verified in a sandbox (no device): `tsc --noEmit` passes, Android bundle builds, 105 automated tests pass in
 11 suites (unit: money, dates, calculations, filters, validation, reducers, i18n; integration: migrations and repositories on
 real SQLite, contexts, navigation, end-to-end flows on the real screens).
-**Not yet tested:** the real SQLite file on the phone, persistence after force-closing the app, keyboard behaviour in
-forms, accent-insensitive search on Hermes, dark mode appearance of the new screens (manual checklist D1 to D12).
+Developer moved on to Phase 5; the manual checklist D1 to D12 (see `TEST_PLAN.md`) was not reported.
+
+## 2026-11-12, Phase 5 (monthly budgets)
+- `budgetRepository` (insert / read / update / soft delete) with the budget rules: expense categories only, real month,
+  one budget per category + month + currency. Shared rules moved to `src/database/rules.ts`.
+- `src/utils/budgetCalculations.ts`: spent (expense, same category, month and currency), remaining, exceeded amount,
+  real percentage (rounded down, not capped), bar percentage (capped), status with integer thresholds, summaries, totals.
+- `budgetSchema` (Zod): limit > 0, existing expense category, valid month, duplicate check (the edited budget does not clash with itself).
+- `BudgetsContext` now reads and writes SQLite and exposes `summaries` and `totals` for the selected month (derived with
+  `useMemo` from the budgets and the transactions); `useBudgetOverview(month)` for the dashboard.
+- Screens: Budgets tab (month switcher, 4 summary cards, one card per budget, empty state, floating add button),
+  budget form (create and edit, delete with confirmation, month switcher, read-only currency), dashboard budget overview.
+- Components: BudgetCard, BudgetProgressBar, BudgetStatusBadge (icon + text + color), BudgetForm, BudgetOverviewCard.
+- Test helper change: the loading screen has `testID="loading-state"` (budget progress bars are progressbars too).
+
+Verified in a sandbox (no device): `tsc --noEmit` passes, Android bundle builds, 161 automated tests pass in 13 suites.
+**Not yet tested:** Phase 5 on the physical phone (manual checklist B1 to B10 in `TEST_PLAN.md`).

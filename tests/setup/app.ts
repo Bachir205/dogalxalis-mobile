@@ -9,7 +9,7 @@ import { flushPromises } from './helpers';
 export async function startApp(initialUrl?: string) {
   await renderRouter('src/app', initialUrl ? { initialUrl } : undefined);
   await flushPromises();
-  await waitFor(() => expect(screen.queryByRole('progressbar')).toBeNull());
+  await waitFor(() => expect(screen.queryByTestId('loading-state')).toBeNull());
 }
 
 export async function typeInto(label: string, text: string) {

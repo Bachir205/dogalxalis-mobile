@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 
+import { BudgetOverviewCard } from '@/components/budgets/BudgetOverviewCard';
 import { CategoryBadge } from '@/components/categories/CategoryBadge';
 import { SummaryCard } from '@/components/dashboard/SummaryCard';
 import { TransactionCard } from '@/components/transactions/TransactionCard';
@@ -49,6 +50,7 @@ export default function HomeScreen() {
     () => ({ currency, month: period === 'month' ? getCurrentMonth() : null }),
     [currency, period],
   );
+  const currentMonth = getCurrentMonth();
   const totals = useMemo(() => computeTotals(transactions, scope), [transactions, scope]);
   const spending = useMemo(
     () => computeCategorySpending(transactions, scope).slice(0, SPENDING_ROWS),
@@ -117,10 +119,7 @@ export default function HomeScreen() {
           )}
         </AppCard>
 
-        <AppCard>
-          <AppText variant="subtitle">{t('home.budgets')}</AppText>
-          <AppText tone="muted">{t('home.budgetsSoon')}</AppText>
-        </AppCard>
+        <BudgetOverviewCard month={currentMonth} />
 
         <View style={{ gap: spacing.sm }}>
           <AppText variant="subtitle">{t('home.recent')}</AppText>

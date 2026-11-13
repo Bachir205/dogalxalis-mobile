@@ -17,7 +17,7 @@ describe('budgetsReducer', () => {
   const initial = createInitialBudgetsState(new Date(2026, 10, 15)); // 15 Nov 2026
 
   it('starts on the current month with no budgets', () => {
-    expect(initial).toEqual({ items: [], selectedMonth: '2026-11', status: 'ready', error: null });
+    expect(initial).toEqual({ items: [], selectedMonth: '2026-11', status: 'idle', error: null });
   });
 
   it('adds, updates and removes budgets', () => {

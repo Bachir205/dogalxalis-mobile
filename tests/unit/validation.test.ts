@@ -191,3 +191,72 @@ describe('getCategoryName', () => {
     expect(getCategoryName(undefined, t)).toBe('—');
   });
 });
+
+describe('budget schema', () => {
+  // imported lazily to keep the import list at the top of this file unchanged
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { createBudgetSchema, buildBudgetInput } = require('@/validation/budgetSchema');
+
+  const existing = [
+    {
+      id: 'b1',
+      categoryId: 'cat_food',
+      amountMinor: 10000,
+      currency: 'XOF',
+      month: '2026-11',
+      createdAt: 'n',
+      updatedAt: 'n',
+      syncStatus: 'synced',
+    },
+  ];
+  const valid = { categoryId: 'cat_transport', amount: '5000', month: '2026-11' };
+  const schema = createBudgetSchema({ currency: 'XOF', categories, budgets: existing });
+  const messages = (values: object, s = schema) => {
+    const result = s.safeParse(values);
+    return result.success ? [] : result.error.issues.map((issue: { message: string }) => issue.message);
+  };
+
+  it('accepts a valid budget', () => {
+    expect(messages(valid)).toEqual([]);
+  });
+
+  it('requires a limit greater than zero, in the right format for the currency', () => {
+    expect(messages({ ...valid, amount: '' })).toEqual(['validation.amountRequired']);
+    expect(messages({ ...valid, amount: '0' })).toEqual(['validation.amountNotPositive']);
+    expect(messages({ ...valid, amount: '-5' })).toEqual(['validation.amountInvalid']);
+    expect(messages({ ...valid, amount: '10.5' })).toEqual(['validation.amountTooManyDecimals']);
+  });
+
+  it('requires an existing category, and it must be an expense category', () => {
+    expect(messages({ ...valid, categoryId: '' })).toEqual(['validation.categoryRequired']);
+    expect(messages({ ...valid, categoryId: 'nope' })).toEqual(['validation.categoryNotFound']);
+    expect(messages({ ...valid, categoryId: 'cat_salary' })).toEqual(['validation.budgetCategoryNotExpense']);
+  });
+
+  it('requires a valid month', () => {
+    expect(messages({ ...valid, month: '2026-13' })).toEqual(['validation.monthInvalid']);
+    expect(messages({ ...valid, month: 'nov' })).toEqual(['validation.monthInvalid']);
+  });
+
+  it('refuses a second budget for the same category, month and currency', () => {
+    expect(messages({ ...valid, categoryId: 'cat_food' })).toEqual(['validation.budgetDuplicate']);
+    expect(messages({ ...valid, categoryId: 'cat_food', month: '2026-12' })).toEqual([]);
+    const euro = createBudgetSchema({ currency: 'EUR', categories, budgets: existing });
+    expect(messages({ ...valid, categoryId: 'cat_food', amount: '10.50' }, euro)).toEqual([]);
+  });
+
+  it('lets a budget keep its own category and month while being edited', () => {
+    const editing = createBudgetSchema({ currency: 'XOF', categories, budgets: existing, editingId: 'b1' });
+    expect(messages({ ...valid, categoryId: 'cat_food' }, editing)).toEqual([]);
+  });
+
+  it('converts validated values into record fields', () => {
+    expect(buildBudgetInput({ categoryId: 'cat_food', amount: '10 000', month: '2026-11' }, 'XOF')).toEqual({
+      categoryId: 'cat_food',
+      amountMinor: 10000,
+      currency: 'XOF',
+      month: '2026-11',
+    });
+    expect(() => buildBudgetInput({ categoryId: 'cat_food', amount: 'x', month: '2026-11' }, 'XOF')).toThrow();
+  });
+});

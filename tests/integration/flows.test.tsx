@@ -2,35 +2,12 @@ import { router } from 'expo-router';
 import { act, fireEvent, screen } from 'expo-router/testing-library';
 import { Alert } from 'react-native';
 
-import { runMigrations } from '@/database/migrations';
-import { getAllTransactions, insertTransaction } from '@/database/repositories/transactionRepository';
-import type { Transaction } from '@/types';
+import { getAllTransactions } from '@/database/repositories/transactionRepository';
 import { getCurrentMonth, getToday, shiftMonth } from '@/utils/date';
 
 import { press, startApp, typeInto } from '../setup/app';
+import { seedTransaction } from '../setup/seed';
 import { openDatabaseAsync } from '../setup/sqliteMock';
-
-let seq = 0;
-/** Puts a transaction straight into the database, as if it had been saved in an earlier session. */
-async function seed(overrides: Partial<Transaction>) {
-  const db = await openDatabaseAsync();
-  await runMigrations(db);
-  seq += 1;
-  await insertTransaction(db, {
-    id: `seed-${seq}`,
-    title: 'Lunch',
-    amountMinor: 2500,
-    currency: 'XOF',
-    type: 'expense',
-    categoryId: 'cat_food',
-    description: null,
-    date: getToday(),
-    createdAt: `2026-11-10T08:00:${String(seq).padStart(2, '0')}.000Z`,
-    updatedAt: '2026-11-10T08:00:00.000Z',
-    syncStatus: 'pending',
-    ...overrides,
-  });
-}
 
 async function addLunchThroughTheForm() {
   await press('Add transaction');
@@ -114,7 +91,7 @@ describe('adding a transaction', () => {
 
 describe('editing and deleting', () => {
   it('edits a transaction and recalculates the dashboard', async () => {
-    await seed({});
+    await seedTransaction({});
     await startApp();
     expect(screen.getByLabelText('Expenses: 2,500 FCFA')).toBeOnTheScreen();
 
@@ -135,7 +112,7 @@ describe('editing and deleting', () => {
   });
 
   it('asks for confirmation, then deletes: hidden everywhere, soft-deleted in SQLite', async () => {
-    await seed({});
+    await seedTransaction({});
     await startApp('/transactions');
     await fireEvent.press(screen.getByText('Lunch'));
 
@@ -163,9 +140,9 @@ describe('transactions list: search and filters', () => {
   const lastMonth = shiftMonth(getCurrentMonth(), -1);
 
   beforeEach(async () => {
-    await seed({ title: 'Lunch', categoryId: 'cat_food' });
-    await seed({ title: 'Bus', categoryId: 'cat_transport', date: `${lastMonth}-15` });
-    await seed({ title: 'Paycheck', type: 'income', categoryId: 'cat_salary', amountMinor: 100000 });
+    await seedTransaction({ title: 'Lunch', categoryId: 'cat_food' });
+    await seedTransaction({ title: 'Bus', categoryId: 'cat_transport', date: `${lastMonth}-15` });
+    await seedTransaction({ title: 'Paycheck', type: 'income', categoryId: 'cat_salary', amountMinor: 100000 });
   });
 
   const visible = () => ['Lunch', 'Bus', 'Paycheck'].filter((title) => screen.queryByText(title) !== null);
@@ -202,10 +179,10 @@ describe('transactions list: search and filters', () => {
 describe('dashboard scope', () => {
   it('counts only the current month and the active currency, and follows the period and currency choice', async () => {
     const lastMonth = shiftMonth(getCurrentMonth(), -1);
-    await seed({ type: 'income', categoryId: 'cat_salary', amountMinor: 100000, title: 'Pay' });
-    await seed({ amountMinor: 30000, title: 'Rent' });
-    await seed({ amountMinor: 5000, title: 'Old', date: `${lastMonth}-10` });
-    await seed({ amountMinor: 7777, title: 'Euro', currency: 'EUR' });
+    await seedTransaction({ type: 'income', categoryId: 'cat_salary', amountMinor: 100000, title: 'Pay' });
+    await seedTransaction({ amountMinor: 30000, title: 'Rent' });
+    await seedTransaction({ amountMinor: 5000, title: 'Old', date: `${lastMonth}-10` });
+    await seedTransaction({ amountMinor: 7777, title: 'Euro', currency: 'EUR' });
 
     await startApp();
     expect(screen.getByLabelText('Income: 100,000 FCFA')).toBeOnTheScreen();

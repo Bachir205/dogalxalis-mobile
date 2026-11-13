@@ -2,6 +2,7 @@ import type { CurrencyCode } from '@/constants/currencies';
 import type { NewTransactionInput, SyncStatus, Transaction, TransactionType } from '@/types';
 
 import { DataError } from '../errors';
+import { assertCategoryOfType } from '../rules';
 import type { Db, SqlParams } from '../types';
 
 interface TransactionRow {
@@ -34,16 +35,6 @@ function toTransaction(row: TransactionRow): Transaction {
   };
 }
 
-/** Business rule: the category must exist and have the same type as the transaction. */
-async function assertCategoryMatches(db: Db, categoryId: string, type: TransactionType) {
-  const category = await db.getFirstAsync<{ type: TransactionType }>(
-    'SELECT type FROM categories WHERE id = ?',
-    [categoryId],
-  );
-  if (!category) throw new DataError('CATEGORY_NOT_FOUND');
-  if (category.type !== type) throw new DataError('CATEGORY_TYPE_MISMATCH');
-}
-
 /** Newest first. Deleted (soft-deleted) rows are never returned. */
 export async function getAllTransactions(db: Db): Promise<Transaction[]> {
   const rows = await db.getAllAsync<TransactionRow>(
@@ -64,7 +55,7 @@ export async function getTransactionById(db: Db, id: string): Promise<Transactio
 }
 
 export async function insertTransaction(db: Db, transaction: Transaction): Promise<void> {
-  await assertCategoryMatches(db, transaction.categoryId, transaction.type);
+  await assertCategoryOfType(db, transaction.categoryId, transaction.type);
   await db.runAsync(
     `INSERT INTO transactions
        (id, title, amount_minor, currency, type, category_id, description,
@@ -108,7 +99,7 @@ export async function updateTransaction(
 
   const finalType = changes.type ?? existing.type;
   const finalCategory = changes.categoryId ?? existing.categoryId;
-  await assertCategoryMatches(db, finalCategory, finalType);
+  await assertCategoryOfType(db, finalCategory, finalType);
 
   const sets: string[] = [];
   const params: SqlParams = [];
