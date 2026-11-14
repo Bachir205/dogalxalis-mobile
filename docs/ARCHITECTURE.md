@@ -45,11 +45,12 @@ src/app/_layout.tsx                 providers + root Stack
 | ThemeContext | mode (light/dark/system), resolved scheme, isReady | AsyncStorage | Implemented (Phase 3) |
 | PreferencesContext | language (fr/en), currency (XOF/EUR/USD), isReady | AsyncStorage | Implemented (Phase 3) |
 | DatabaseContext | the open SQLite database; loading and error screens | SQLite file `dogalxalis.db` | Implemented (Phase 4) |
-| CategoriesContext | categories, status, error (useReducer) | SQLite | Implemented (Phase 4); API in Phase 6 |
-| TransactionsContext | transactions, status, error (useReducer) | SQLite | Implemented (Phase 4); API in Phase 6 |
-| BudgetsContext | budgets, selectedMonth, derived summaries and totals, status, error (useReducer) | SQLite | Implemented (Phase 5); API in Phase 6 |
+| CategoriesContext | categories, status, error (useReducer) | SQLite | Implemented (Phase 4), synced in Phase 6 |
+| TransactionsContext | transactions, status, error (useReducer) | SQLite | Implemented (Phase 4), synced in Phase 6 |
+| BudgetsContext | budgets, selectedMonth, derived summaries and totals, status, error (useReducer) | SQLite | Implemented (Phase 5), synced in Phase 6 |
+| SyncContext | sync state, last sync, pending / failed counters, `syncNow()` | none (reads SQLite counters) | Implemented (Phase 6) |
 
-Provider order (`src/contexts/AppProviders.tsx`): `Theme > Preferences > Database > Categories > Transactions > Budgets`.
+Provider order (`src/contexts/AppProviders.tsx`): `Theme > Preferences > Database > Categories > Transactions > Budgets > Sync`.
 `AppGate` keeps the splash screen visible until the saved theme and language are loaded. `DatabaseProvider` opens
 SQLite and runs the migrations before anything that needs data is rendered (spinner while it opens, error screen with
 "Try again" if it fails).
@@ -84,14 +85,32 @@ React Hook Form `useForm` + `Controller` (transaction, budget, category forms).
 React Compiler is **disabled** (`experiments.reactCompiler: false` in `app.json`) so manual
 `useMemo` / `useCallback` behave exactly as taught and can be explained in the presentation.
 
-## Local-first sync
+## Local-first sync (Phase 6)
 
-SQLite is the source of truth; the Express API is a replica. Writes go to SQLite first
-(`sync_status = 'pending'`), then to the API (success: `synced`; network error: stays `pending`;
-4xx: `failed`). Push order: categories, then budgets and transactions. Pull = validated upsert; a
-synced local row missing on the server is re-marked `pending` (never deleted).
-Limitations: single device, last write wins, no propagation of deletions made elsewhere,
-no NetInfo (offline is detected by failed requests).
+SQLite is the source of truth; the Express API is a replica (`src/services/syncService.ts`, SQL in
+`src/database/repositories/syncRepository.ts`, HTTP in `src/services/api.ts`, orchestration in `SyncContext`).
+
+- A write goes to SQLite first (`sync_status = 'pending'`), the screen updates, and a moment later the sync sends it.
+- **Push**, in this order: categories (the server checks them), budgets, transactions. A new or edited row is sent with
+  `PUT`; if the server answers 404 it is sent with `POST`. A deleted row (soft delete) is sent with `DELETE` (204 or 404
+  both count as done) and then removed from SQLite.
+- Result of one row: accepted -> `synced`; refused (4xx) -> `failed` (stays on the phone, retried on the next sync);
+  network error, timeout, 5xx or an unreadable answer -> the whole run stops and everything stays `pending`.
+- A row is only marked `synced` if it has not been edited since it was sent (same `updated_at`): an edit made while the
+  request was in flight stays pending and goes out next time.
+- **Pull**: each server answer is validated with Zod, then merged. A row still `pending` or `failed` (or deleted locally)
+  is never overwritten; an already-synced row takes the server version; an unknown server row is added; a row we believed
+  synced that the server lost is marked `pending` again (the phone is the source of truth). A server row that conflicts
+  locally (for example the same category name) is skipped, not fatal.
+- **When it runs**: at startup, when the app returns to the foreground, 400 ms after each local change, and on "Sync now"
+  in Settings. Only one run at a time. After a run the three data contexts `reload()` from SQLite silently (no spinner).
+- No server configured (`EXPO_PUBLIC_API_URL` empty): the sync is disabled, no badges are shown, the app works offline.
+- UI: "Pending" / "Rejected" badges on transactions, budgets and categories; a Synchronization card in Settings
+  (status, last sync, waiting count, refused count, "Sync now").
+
+Limitations: one device per data set, no authentication, last write wins (a pending local change always wins over the
+server), deletions made on the server by another client are not propagated (the phone would send the row again), and no
+network-state library (offline is detected by a failed request or a timeout of 8 s).
 
 ## Theme and i18n
 

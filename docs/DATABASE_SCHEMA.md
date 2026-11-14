@@ -62,8 +62,9 @@ block re-creating the same category and month. `categories` gets `sync_status` (
 
 - A transaction's category type must equal its type (enforced in Zod and tests).
 - A category's type cannot change after creation; categories cannot be deleted in v1.
-- Deleting always sets `deleted_at` and `sync_status = 'pending'` (soft delete). The row is only purged after the
-  API confirmed the delete (Phase 6; a 404 on DELETE counts as confirmed). This is simpler and safer than telling
+- Deleting always sets `deleted_at` and `sync_status = 'pending'` (soft delete). The row is purged by the
+  synchronization once the API confirmed the delete (204, or 404 = already gone). With no server configured the soft-deleted
+  rows simply stay in the table; every read ignores them. This is simpler and safer than telling
   "never synced" rows from "edited" rows, which are both `pending`. All reads exclude `deleted_at IS NOT NULL`,
   so totals and budgets ignore a deleted row immediately.
 - The category rules are enforced in three places: Zod (forms), the repository (`DataError` codes

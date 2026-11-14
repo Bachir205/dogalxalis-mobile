@@ -1,0 +1,123 @@
+{
+  "categories": [
+    {
+      "id": "cat_food",
+      "name": "Food",
+      "type": "expense",
+      "icon": "utensils",
+      "color": "#E67E22",
+      "createdAt": "2026-11-14T12:19:24.016Z",
+      "updatedAt": "2026-11-14T12:19:24.016Z"
+    },
+    {
+      "id": "cat_transport",
+      "name": "Transport",
+      "type": "expense",
+      "icon": "car",
+      "color": "#3498DB",
+      "createdAt": "2026-11-14T12:19:24.016Z",
+      "updatedAt": "2026-11-14T12:19:24.016Z"
+    },
+    {
+      "id": "cat_shopping",
+      "name": "Shopping",
+      "type": "expense",
+      "icon": "shopping-bag",
+      "color": "#9B59B6",
+      "createdAt": "2026-11-14T12:19:24.016Z",
+      "updatedAt": "2026-11-14T12:19:24.016Z"
+    },
+    {
+      "id": "cat_bills",
+      "name": "Bills",
+      "type": "expense",
+      "icon": "receipt",
+      "color": "#E74C3C",
+      "createdAt": "2026-11-14T12:19:24.016Z",
+      "updatedAt": "2026-11-14T12:19:24.016Z"
+    },
+    {
+      "id": "cat_health",
+      "name": "Health",
+      "type": "expense",
+      "icon": "heart-pulse",
+      "color": "#E91E63",
+      "createdAt": "2026-11-14T12:19:24.016Z",
+      "updatedAt": "2026-11-14T12:19:24.016Z"
+    },
+    {
+      "id": "cat_education",
+      "name": "Education",
+      "type": "expense",
+      "icon": "graduation-cap",
+      "color": "#1ABC9C",
+      "createdAt": "2026-11-14T12:19:24.016Z",
+      "updatedAt": "2026-11-14T12:19:24.016Z"
+    },
+    {
+      "id": "cat_entertainment",
+      "name": "Entertainment",
+      "type": "expense",
+      "icon": "gamepad-2",
+      "color": "#F39C12",
+      "createdAt": "2026-11-14T12:19:24.016Z",
+      "updatedAt": "2026-11-14T12:19:24.016Z"
+    },
+    {
+      "id": "cat_other_expense",
+      "name": "Other",
+      "type": "expense",
+      "icon": "tag",
+      "color": "#7F8C8D",
+      "createdAt": "2026-11-14T12:19:24.016Z",
+      "updatedAt": "2026-11-14T12:19:24.016Z"
+    },
+    {
+      "id": "cat_salary",
+      "name": "Salary",
+      "type": "income",
+      "icon": "banknote",
+      "color": "#27AE60",
+      "createdAt": "2026-11-14T12:19:24.016Z",
+      "updatedAt": "2026-11-14T12:19:24.016Z"
+    },
+    {
+      "id": "cat_allowance",
+      "name": "Allowance",
+      "type": "income",
+      "icon": "wallet",
+      "color": "#2ECC71",
+      "createdAt": "2026-11-14T12:19:24.016Z",
+      "updatedAt": "2026-11-14T12:19:24.016Z"
+    },
+    {
+      "id": "cat_freelance",
+      "name": "Freelance",
+      "type": "income",
+      "icon": "laptop",
+      "color": "#16A085",
+      "createdAt": "2026-11-14T12:19:24.016Z",
+      "updatedAt": "2026-11-14T12:19:24.016Z"
+    },
+    {
+      "id": "cat_business",
+      "name": "Business",
+      "type": "income",
+      "icon": "briefcase",
+      "color": "#2980B9",
+      "createdAt": "2026-11-14T12:19:24.016Z",
+      "updatedAt": "2026-11-14T12:19:24.016Z"
+    },
+    {
+      "id": "cat_other_income",
+      "name": "Other",
+      "type": "income",
+      "icon": "tag",
+      "color": "#95A5A6",
+      "createdAt": "2026-11-14T12:19:24.016Z",
+      "updatedAt": "2026-11-14T12:19:24.016Z"
+    }
+  ],
+  "transactions": [],
+  "budgets": []
+}

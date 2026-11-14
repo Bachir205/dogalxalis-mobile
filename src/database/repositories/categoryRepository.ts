@@ -4,7 +4,7 @@ import { DataError } from '../errors';
 import { isUniqueViolation } from '../rules';
 import type { Db, SqlParams } from '../types';
 
-interface CategoryRow {
+export interface CategoryRow {
   id: string;
   name: string;
   type: TransactionType;
@@ -15,7 +15,7 @@ interface CategoryRow {
   sync_status: SyncStatus;
 }
 
-function toCategory(row: CategoryRow): Category {
+export function toCategory(row: CategoryRow): Category {
   return {
     id: row.id,
     name: row.name,

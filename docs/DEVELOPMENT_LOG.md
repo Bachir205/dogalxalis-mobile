@@ -83,4 +83,22 @@ Developer moved on to Phase 5; the manual checklist D1 to D12 (see `TEST_PLAN.md
 - Test helper change: the loading screen has `testID="loading-state"` (budget progress bars are progressbars too).
 
 Verified in a sandbox (no device): `tsc --noEmit` passes, Android bundle builds, 161 automated tests pass in 13 suites.
-**Not yet tested:** Phase 5 on the physical phone (manual checklist B1 to B10 in `TEST_PLAN.md`).
+Developer moved on to Phase 6; the manual checklist B1 to B10 (see `TEST_PLAN.md`) was not reported.
+
+## 2026-11-14, Phase 6 (Express API and synchronization)
+- `backend/`: Express 5 + TypeScript + Zod, layers routes -> controllers -> services -> JSON-file store, uniform error shape,
+  idempotent POST, rules identical to the app (category type, expense-only budgets, duplicates, immutable category type),
+  `0.0.0.0` listening with LAN addresses printed, 20 tests on a real server (`npm test` in `backend/`).
+- App: centralized `ApiClient` (`src/services/api.ts`): 8 s timeout, typed `ApiError` (network / timeout / http / invalid),
+  Zod validation of every answer, URL from `EXPO_PUBLIC_API_URL` (null = offline-only). `.env.example` added.
+- Sync engine (`syncService.ts`) + `syncRepository.ts` + `SyncContext` (startup, foreground, 400 ms after a change, "Sync now").
+  Contexts gained a silent `reload()` and notify the sync after each local write.
+- UI: Pending / Rejected badges, Synchronization card in Settings.
+- Root `tsconfig.json` now excludes `backend/` (it has its own `tsconfig.json`).
+- Versions: backend pinned to TypeScript ~6.0.3 and @types/node ^22 (npm would otherwise pick TypeScript 7 and Node 26 types).
+
+Verified in a sandbox (no phone): app `tsc` and Android bundle pass; 200 app tests in 16 suites; 20 API tests; backend build and
+compiled server answer real requests; a real end-to-end script (real API client + real sync engine + SQLite engine against
+the real server) passed, including a real server outage, a restart that kept the data, a second "phone" pulling everything,
+and a 409 refusal. The end-to-end script is not part of the delivered test suite.
+**Not yet tested:** the phone reaching the PC over Wi-Fi (firewall, `http://` in Expo Go), sync on the real device (checklist S1 to S10).

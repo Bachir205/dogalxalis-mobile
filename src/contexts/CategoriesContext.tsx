@@ -16,6 +16,7 @@ import {
 import { useDatabase } from '@/hooks/useDatabase';
 import { categoriesReducer, initialCategoriesState } from '@/reducers/categoriesReducer';
 import type { Category, LoadStatus, NewCategoryInput } from '@/types';
+import { notifyLocalChange } from '@/services/syncEvents';
 import { generateId } from '@/utils/id';
 
 export interface CategoriesContextValue {
@@ -26,6 +27,8 @@ export interface CategoriesContextValue {
   addCategory: (input: NewCategoryInput) => Promise<Category>;
   updateCategory: (id: string, changes: CategoryChanges) => Promise<void>;
   refresh: () => Promise<void>;
+  /** Re-reads SQLite without showing the loading state (used after a synchronization). */
+  reload: () => Promise<void>;
 }
 
 export const CategoriesContext = createContext<CategoriesContextValue | null>(null);
@@ -34,14 +37,20 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
   const db = useDatabase();
   const [state, dispatch] = useReducer(categoriesReducer, initialCategoriesState);
 
-  const refresh = useCallback(async () => {
-    dispatch({ type: 'LOAD_START' });
-    try {
-      dispatch({ type: 'LOAD_SUCCESS', items: await getAllCategories(db) });
-    } catch (error) {
-      dispatch({ type: 'LOAD_FAILURE', error: error instanceof Error ? error.message : 'load failed' });
-    }
-  }, [db]);
+  const load = useCallback(
+    async (silent: boolean) => {
+      // A silent reload (after a synchronization) keeps the screen as it is: no loading spinner.
+      if (!silent) dispatch({ type: 'LOAD_START' });
+      try {
+        dispatch({ type: 'LOAD_SUCCESS', items: await getAllCategories(db) });
+      } catch (error) {
+        dispatch({ type: 'LOAD_FAILURE', error: error instanceof Error ? error.message : 'load failed' });
+      }
+    },
+    [db],
+  );
+  const refresh = useCallback(() => load(false), [load]);
+  const reload = useCallback(() => load(true), [load]);
 
   // Effect: load the saved categories as soon as the database is available.
   useEffect(() => {
@@ -61,6 +70,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
       };
       await insertCategory(db, item);
       dispatch({ type: 'ADDED', item });
+      notifyLocalChange(); // tell the sync that something is waiting to be sent
       return item;
     },
     [db],
@@ -71,6 +81,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
       const now = new Date().toISOString();
       await updateCategoryRow(db, id, changes, now);
       dispatch({ type: 'UPDATED', id, changes, updatedAt: now });
+      notifyLocalChange();
     },
     [db],
   );
@@ -90,8 +101,9 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
       addCategory,
       updateCategory,
       refresh,
+      reload,
     }),
-    [state, categoriesById, addCategory, updateCategory, refresh],
+    [state, categoriesById, addCategory, updateCategory, refresh, reload],
   );
 
   return <CategoriesContext.Provider value={value}>{children}</CategoriesContext.Provider>;

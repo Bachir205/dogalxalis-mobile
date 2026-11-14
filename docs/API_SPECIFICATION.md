@@ -1,6 +1,6 @@
 # API specification (independent Express backend)
 
-Status: **designed, not implemented** (Phase 6). No university API exists, so the project builds its own.
+Status: **implemented in Phase 6** (`backend/`, 20 tests; client in `src/services/api.ts`). No university API exists, so the project builds its own.
 The base URL is never hard-coded: the app reads `EXPO_PUBLIC_API_URL` (see `.env.example`, added in Phase 6).
 
 ## Conventions
@@ -43,8 +43,32 @@ The base URL is never hard-coded: the app reads `EXPO_PUBLIC_API_URL` (see `.env
 
 No category `DELETE` in v1 (see `DATABASE_SCHEMA.md`).
 
+## Rules enforced by the server
+
+- Bodies are validated with Zod and unknown fields are refused (the app never sends its local `syncStatus`).
+- Transaction: category must exist and have the transaction's type (`CATEGORY_NOT_FOUND`, `CATEGORY_TYPE_MISMATCH`, 400);
+  amount is a positive integer of minor units (at most 10^12); `date` is a real calendar date.
+- Budget: expense category only; one budget per category + month + currency (`DUPLICATE`, 409, also on PUT).
+- Category: name unique per type, any case (`DUPLICATE`, 409); the type never changes (`TYPE_IMMUTABLE`, 400).
+- `POST` is idempotent: sending an id that already exists returns the stored record with 200 and changes nothing,
+  so a retry after a lost answer never duplicates. `PUT` replaces the record (404 if it does not exist).
+  `DELETE` answers 404 when the record is already gone (the app treats that as success).
+- Other errors: `ID_MISMATCH` (body id differs from the URL, 400), `INVALID_JSON` (400), `PAYLOAD_TOO_LARGE` (413),
+  `NOT_FOUND` for unknown routes (404), `INTERNAL` (500). Every error has the same JSON shape.
+
+## How the app uses it
+
+See `ARCHITECTURE.md` (local-first synchronization). Short version: SQLite is the source of truth; local changes are
+sent with `PUT` (or `POST` if the server answers 404), deletions with `DELETE`, then the server data is pulled and merged.
+
 ## Physical-device networking
 
 `localhost` on the phone is the phone itself. During development use the PC's LAN IP on the same Wi-Fi
-and allow the port in Windows Firewall. Plain `http://` is expected to work in Expo Go; this is
-verified on the real device in Phase 6. Hosting decision (D7) is deferred to Phase 6.
+and allow the port in Windows Firewall (see `backend/README.md`). The address is read from `EXPO_PUBLIC_API_URL`
+(`.env`, never written in the code); with no value the app works offline only.
+
+Android blocks plain `http://` in built apps (API 28+) unless cleartext traffic is enabled
+(`expo-build-properties`, `android.usesCleartextTraffic: true`). Developers report that plain `http://` works inside
+Expo Go; this has to be confirmed on the real phone (manual checklist S1). A standalone APK or a development build
+would need that setting, or an `https://` hosting. Hosting (decision D7) is not needed for the presentation if the
+demo runs on the local network.

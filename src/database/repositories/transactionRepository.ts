@@ -5,7 +5,7 @@ import { DataError } from '../errors';
 import { assertCategoryOfType } from '../rules';
 import type { Db, SqlParams } from '../types';
 
-interface TransactionRow {
+export interface TransactionRow {
   id: string;
   title: string;
   amount_minor: number;
@@ -19,7 +19,7 @@ interface TransactionRow {
   sync_status: SyncStatus;
 }
 
-function toTransaction(row: TransactionRow): Transaction {
+export function toTransaction(row: TransactionRow): Transaction {
   return {
     id: row.id,
     title: row.title,

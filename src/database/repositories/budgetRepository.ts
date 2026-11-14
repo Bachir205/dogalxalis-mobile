@@ -6,7 +6,7 @@ import { DataError } from '../errors';
 import { assertCategoryOfType, isUniqueViolation } from '../rules';
 import type { Db, SqlParams } from '../types';
 
-interface BudgetRow {
+export interface BudgetRow {
   id: string;
   category_id: string;
   amount_minor: number;
@@ -17,7 +17,7 @@ interface BudgetRow {
   sync_status: SyncStatus;
 }
 
-function toBudget(row: BudgetRow): Budget {
+export function toBudget(row: BudgetRow): Budget {
   return {
     id: row.id,
     categoryId: row.category_id,

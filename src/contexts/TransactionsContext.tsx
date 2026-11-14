@@ -19,6 +19,7 @@ import {
   transactionsReducer,
 } from '@/reducers/transactionsReducer';
 import type { LoadStatus, NewTransactionInput, Transaction } from '@/types';
+import { notifyLocalChange } from '@/services/syncEvents';
 import { generateId } from '@/utils/id';
 
 export interface TransactionsContextValue {
@@ -29,6 +30,8 @@ export interface TransactionsContextValue {
   updateTransaction: (id: string, changes: Partial<NewTransactionInput>) => Promise<void>;
   removeTransaction: (id: string) => Promise<void>;
   refresh: () => Promise<void>;
+  /** Re-reads SQLite without showing the loading state (used after a synchronization). */
+  reload: () => Promise<void>;
 }
 
 export const TransactionsContext = createContext<TransactionsContextValue | null>(null);
@@ -41,14 +44,20 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
   const db = useDatabase();
   const [state, dispatch] = useReducer(transactionsReducer, initialTransactionsState);
 
-  const refresh = useCallback(async () => {
-    dispatch({ type: 'LOAD_START' });
-    try {
-      dispatch({ type: 'LOAD_SUCCESS', items: await getAllTransactions(db) });
-    } catch (error) {
-      dispatch({ type: 'LOAD_FAILURE', error: error instanceof Error ? error.message : 'load failed' });
-    }
-  }, [db]);
+  const load = useCallback(
+    async (silent: boolean) => {
+      // A silent reload (after a synchronization) keeps the screen as it is: no loading spinner.
+      if (!silent) dispatch({ type: 'LOAD_START' });
+      try {
+        dispatch({ type: 'LOAD_SUCCESS', items: await getAllTransactions(db) });
+      } catch (error) {
+        dispatch({ type: 'LOAD_FAILURE', error: error instanceof Error ? error.message : 'load failed' });
+      }
+    },
+    [db],
+  );
+  const refresh = useCallback(() => load(false), [load]);
+  const reload = useCallback(() => load(true), [load]);
 
   // Effect: show the saved transactions as soon as the database is available.
   useEffect(() => {
@@ -67,6 +76,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
       };
       await insertTransaction(db, item);
       dispatch({ type: 'ADDED', item });
+      notifyLocalChange(); // tell the sync that something is waiting to be sent
       return item;
     },
     [db],
@@ -77,6 +87,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
       const now = new Date().toISOString();
       await updateTransactionRow(db, id, changes, now);
       dispatch({ type: 'UPDATED', id, changes, updatedAt: now });
+      notifyLocalChange();
     },
     [db],
   );
@@ -85,6 +96,7 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
     async (id: string) => {
       await softDeleteTransaction(db, id, new Date().toISOString());
       dispatch({ type: 'REMOVED', id });
+      notifyLocalChange();
     },
     [db],
   );
@@ -98,8 +110,9 @@ export function TransactionsProvider({ children }: { children: ReactNode }) {
       updateTransaction,
       removeTransaction,
       refresh,
+      reload,
     }),
-    [state, addTransaction, updateTransaction, removeTransaction, refresh],
+    [state, addTransaction, updateTransaction, removeTransaction, refresh, reload],
   );
 
   return <TransactionsContext.Provider value={value}>{children}</TransactionsContext.Provider>;

@@ -24,6 +24,7 @@ import {
   type BudgetSummary,
   type BudgetTotals,
 } from '@/utils/budgetCalculations';
+import { notifyLocalChange } from '@/services/syncEvents';
 import { generateId } from '@/utils/id';
 
 export interface BudgetsContextValue {
@@ -42,6 +43,8 @@ export interface BudgetsContextValue {
   updateBudget: (id: string, changes: Partial<NewBudgetInput>) => Promise<void>;
   removeBudget: (id: string) => Promise<void>;
   refresh: () => Promise<void>;
+  /** Re-reads SQLite without showing the loading state (used after a synchronization). */
+  reload: () => Promise<void>;
 }
 
 export const BudgetsContext = createContext<BudgetsContextValue | null>(null);
@@ -57,14 +60,20 @@ export function BudgetsProvider({ children }: { children: ReactNode }) {
   const { currency } = usePreferences();
   const [state, dispatch] = useReducer(budgetsReducer, undefined, () => createInitialBudgetsState());
 
-  const refresh = useCallback(async () => {
-    dispatch({ type: 'LOAD_START' });
-    try {
-      dispatch({ type: 'LOAD_SUCCESS', items: await getAllBudgets(db) });
-    } catch (error) {
-      dispatch({ type: 'LOAD_FAILURE', error: error instanceof Error ? error.message : 'load failed' });
-    }
-  }, [db]);
+  const load = useCallback(
+    async (silent: boolean) => {
+      // A silent reload (after a synchronization) keeps the screen as it is: no loading spinner.
+      if (!silent) dispatch({ type: 'LOAD_START' });
+      try {
+        dispatch({ type: 'LOAD_SUCCESS', items: await getAllBudgets(db) });
+      } catch (error) {
+        dispatch({ type: 'LOAD_FAILURE', error: error instanceof Error ? error.message : 'load failed' });
+      }
+    },
+    [db],
+  );
+  const refresh = useCallback(() => load(false), [load]);
+  const reload = useCallback(() => load(true), [load]);
 
   useEffect(() => {
     void refresh();
@@ -84,6 +93,7 @@ export function BudgetsProvider({ children }: { children: ReactNode }) {
       const item: Budget = { ...input, id: generateId(), createdAt: now, updatedAt: now, syncStatus: 'pending' };
       await insertBudget(db, item);
       dispatch({ type: 'ADDED', item });
+      notifyLocalChange(); // tell the sync that something is waiting to be sent
       return item;
     },
     [db],
@@ -94,6 +104,7 @@ export function BudgetsProvider({ children }: { children: ReactNode }) {
       const now = new Date().toISOString();
       await updateBudgetRow(db, id, changes, now);
       dispatch({ type: 'UPDATED', id, changes, updatedAt: now });
+      notifyLocalChange();
     },
     [db],
   );
@@ -102,6 +113,7 @@ export function BudgetsProvider({ children }: { children: ReactNode }) {
     async (id: string) => {
       await softDeleteBudget(db, id, new Date().toISOString());
       dispatch({ type: 'REMOVED', id });
+      notifyLocalChange();
     },
     [db],
   );
@@ -128,6 +140,7 @@ export function BudgetsProvider({ children }: { children: ReactNode }) {
       updateBudget,
       removeBudget,
       refresh,
+      reload,
     }),
     [
       state,
@@ -140,6 +153,7 @@ export function BudgetsProvider({ children }: { children: ReactNode }) {
       updateBudget,
       removeBudget,
       refresh,
+      reload,
     ],
   );
 

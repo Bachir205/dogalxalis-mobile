@@ -1,6 +1,7 @@
 import { Pressable, View } from 'react-native';
 
 import { CategoryBadge } from '@/components/categories/CategoryBadge';
+import { SyncBadge } from '@/components/sync/SyncBadge';
 import { AppText } from '@/components/ui';
 import { useI18n } from '@/hooks/useI18n';
 import { useTheme } from '@/hooks/useTheme';
@@ -53,6 +54,7 @@ export function BudgetCard({ summary, category, onPress }: BudgetCardProps) {
             {name}
           </AppText>
           <BudgetStatusBadge status={status} />
+          <SyncBadge status={budget.syncStatus} />
         </View>
         <AppText variant="subtitle">{`${progressPercent}%`}</AppText>
       </View>

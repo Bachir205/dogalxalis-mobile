@@ -120,6 +120,35 @@ Manual on the Android phone (Manual-pending):
 | B9 | Status is readable without color (icon and text) and in dark mode | Yes |
 | B10 | French labels on all budget screens | Yes |
 
+## API and synchronization (Phase 6)
+
+Automated: app `npm test` (200 tests, 16 suites) and `npm test` in `backend/` (20 tests).
+
+| # | Case | Status |
+|---|---|---|
+| S-a | API on a real server: every endpoint, status codes, error shape, validation, category / budget rules, idempotent POST, PUT 404, DELETE 404, invalid JSON, unknown route, data kept in a JSON file after a restart | Automated-pass (backend) |
+| S-b | API client with a mocked fetch: method, URL, headers, body, encoded ids, 204, validated lists, HTTP error mapping, invalid answers, network failure, timeout, URL from the environment | Automated-pass |
+| S-c | Sync push: new row (PUT 404 then POST), edit (PUT), delete (DELETE then purge, also when the server never had it), order categories / budgets / transactions, local-only field never sent | Automated-pass |
+| S-d | Sync problems: offline keeps everything pending and the next run sends it without duplicates, server error, unreadable answer, refusal marks only that row failed, failed rows retried, edit during a request not marked synced, second run sends nothing | Automated-pass |
+| S-e | Sync pull: adds unknown server rows, synced rows take the server version, pending local changes never overwritten, local deletes not resurrected, rows lost by the server are sent again, conflicting server rows skipped | Automated-pass |
+| S-f | In the app with a fake server: startup pull, automatic push and Pending badge disappearing, offline + "Sync now", Rejected badge and counter, delete sent, budgets and categories sent, no loading spinner during a sync; no server configured = works offline with no badges | Automated-pass |
+| S-g | Real end-to-end (sandbox only, not delivered): real client + real sync engine + SQLite engine against the real Express server, including a real outage and restart, a second device pulling everything, and a 409 refusal | Passed once, not repeatable from the delivered files |
+
+Manual (Manual-pending). First do the connection test: the phone's browser must open `http://<PC-address>:3000/health`.
+
+| # | Case | Expected |
+|---|---|---|
+| S1 | Start the API (`cd backend; npm run dev`), set `.env`, run `npx expo start -c`, open the app | Settings shows "Up to date with the server."; the API console shows requests |
+| S2 | Add a transaction | It appears on the server (`http://<PC-address>:3000/transactions` in the phone browser) within a second; no Pending badge stays |
+| S3 | Stop the API, add a transaction, a budget and a category | Everything works; "Pending" badges; Settings says the server cannot be reached and counts the waiting changes |
+| S4 | Start the API again, wait or press "Sync now" | Badges disappear, counter is 0, the server has everything once (no duplicates) |
+| S5 | Edit and delete a synced transaction | The server copy changes / disappears |
+| S6 | Put the phone in airplane mode, add data, switch it off again | Data kept, sent when the connection returns |
+| S7 | Stop the API for good and use the app for a while | No crash, no spinner loops, no data loss; each screen still loads from SQLite |
+| S8 | Delete `backend/data/db.json` while the API is stopped, restart the API, press "Sync now" | The phone sends its data again; the server has it back |
+| S9 | Send the app to the background and bring it back | A sync starts (check the API console) |
+| S10 | French labels in the Synchronization card and badges; dark mode | Yes |
+
 ## Later phases
 
-API and sync (Phase 6), final integration (Phase 7), README and GitHub (Phase 8): Planned.
+Final integration (Phase 7), README, screenshots and GitHub (Phase 8): Planned.

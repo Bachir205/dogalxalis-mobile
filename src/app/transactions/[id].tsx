@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { CategoryBadge } from '@/components/categories/CategoryBadge';
+import { SyncBadge } from '@/components/sync/SyncBadge';
 import {
   AppButton,
   AppCard,
@@ -81,6 +82,7 @@ export default function TransactionDetailScreen() {
           {amount}
         </AppText>
         <AppText variant="subtitle">{transaction.title}</AppText>
+        <SyncBadge status={transaction.syncStatus} />
       </AppCard>
 
       <AppCard style={{ gap: spacing.md }}>

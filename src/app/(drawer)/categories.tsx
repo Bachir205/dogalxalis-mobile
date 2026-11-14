@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { CategoryBadge } from '@/components/categories/CategoryBadge';
+import { SyncBadge } from '@/components/sync/SyncBadge';
 import {
   AppText,
   ErrorState,
@@ -66,6 +67,7 @@ export default function CategoriesScreen() {
                   })}>
                   <CategoryBadge icon={category.icon} color={category.color} />
                   <AppText style={{ flex: 1 }}>{getCategoryName(category, t)}</AppText>
+                  <SyncBadge status={category.syncStatus} />
                 </Pressable>
               ))
             )}
