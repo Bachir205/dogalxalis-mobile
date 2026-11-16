@@ -1,6 +1,6 @@
 import { DEFAULT_CATEGORIES } from '@/constants/defaultCategories';
 import { DataError } from '@/database/errors';
-import { runMigrations } from '@/database/migrations';
+import { MIGRATIONS, runMigrations } from '@/database/migrations';
 import {
   getAllCategories,
   insertCategory,
@@ -60,7 +60,7 @@ const category = (id: string, name: string, type: 'income' | 'expense' = 'expens
 describe('migrations', () => {
   it('creates the schema, seeds the default categories and records the version', async () => {
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version', []);
-    expect(version?.user_version).toBe(1);
+    expect(version?.user_version).toBe(2);
 
     const tables = await db.getAllAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
@@ -303,5 +303,48 @@ describe('budgets repository', () => {
 
     await expect(insertBudget(db, budget('b'))).resolves.toBeUndefined();
     await expect(softDeleteBudget(db, 'a', 'now')).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+});
+
+describe('upgrading an existing database (migration 2)', () => {
+  it('keeps the data of a version-1 database and marks it as not demo', async () => {
+    const old = await createSqlJsDb();
+    await old.execAsync('PRAGMA foreign_keys = ON;');
+    // Exactly what a phone that installed the first version has: schema 1, seeded categories, user data.
+    await old.withTransactionAsync(async () => {
+      await MIGRATIONS[0].up(old, '2026-11-01T00:00:00.000Z');
+      await old.execAsync('PRAGMA user_version = 1;');
+    });
+    await old.runAsync(
+      `INSERT INTO transactions (id, title, amount_minor, currency, type, category_id, occurred_at, created_at, updated_at, sync_status)
+       VALUES ('old-tx', 'Old lunch', 2500, 'XOF', 'expense', 'cat_food', '2026-11-05', 'n', 'n', 'synced')`,
+      [],
+    );
+    await old.runAsync(
+      `INSERT INTO budgets (id, category_id, amount_minor, currency, month, created_at, updated_at)
+       VALUES ('old-b', 'cat_food', 50000, 'XOF', '2026-11', 'n', 'n')`,
+      [],
+    );
+    expect((await old.getFirstAsync<{ user_version: number }>('PRAGMA user_version', []))?.user_version).toBe(1);
+
+    await runMigrations(old);
+
+    expect((await old.getFirstAsync<{ user_version: number }>('PRAGMA user_version', []))?.user_version).toBe(2);
+    expect(await getTransactionById(old, 'old-tx')).toMatchObject({
+      title: 'Old lunch',
+      amountMinor: 2500,
+      syncStatus: 'synced',
+      isDemo: false,
+    });
+    expect(await getBudgetById(old, 'old-b')).toMatchObject({ amountMinor: 50000, isDemo: false });
+    expect(await getAllCategories(old)).toHaveLength(DEFAULT_CATEGORIES.length);
+  });
+
+  it('stores the demo flag and refuses values other than 0 and 1', async () => {
+    await insertTransaction(db, transaction('d1', { isDemo: true }));
+    await insertTransaction(db, transaction('n1'));
+    expect((await getTransactionById(db, 'd1'))?.isDemo).toBe(true);
+    expect((await getTransactionById(db, 'n1'))?.isDemo).toBe(false);
+    await expect(db.runAsync("UPDATE transactions SET is_demo = 2 WHERE id = 'n1'", [])).rejects.toThrow(/CHECK constraint/i);
   });
 });

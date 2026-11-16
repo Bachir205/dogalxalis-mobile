@@ -10,6 +10,7 @@ import {
   AppCard,
   AppText,
   confirmAction,
+  DemoBadge,
   EmptyState,
   ScreenContainer,
 } from '@/components/ui';
@@ -83,6 +84,7 @@ export default function TransactionDetailScreen() {
         </AppText>
         <AppText variant="subtitle">{transaction.title}</AppText>
         <SyncBadge status={transaction.syncStatus} />
+        <DemoBadge isDemo={transaction.isDemo} />
       </AppCard>
 
       <AppCard style={{ gap: spacing.md }}>

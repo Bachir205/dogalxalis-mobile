@@ -1,6 +1,6 @@
 # Database schema (SQLite, expo-sqlite)
 
-Status: **implemented in Phase 4** (`src/database`). The budgets table and its repository are implemented in Phase 5.
+Status: **implemented** (`src/database`), schema version 2. The budgets table and its repository are implemented in Phase 5.
 Money is stored as integer minor units (XOF 0 decimals, EUR/USD 2). `occurred_at` is a local
 calendar date `YYYY-MM-DD`; `created_at` / `updated_at` / `deleted_at` are ISO UTC timestamps.
 Migrations use `PRAGMA user_version`; migration 1 creates the tables and seeds default categories
@@ -57,6 +57,14 @@ CREATE UNIQUE INDEX ux_budget_cat_month_cur
 Deviations from the original brief: `budgets` gets `deleted_at` and `sync_status` (same sync strategy
 as transactions) and its uniqueness is a **partial** unique index so a soft-deleted budget does not
 block re-creating the same category and month. `categories` gets `sync_status` (create/edit from v1).
+
+## Schema versions
+
+- **Version 1**: the tables above (categories, transactions, budgets) and the seeded categories.
+- **Version 2** (Phase 7): `ALTER TABLE transactions ADD COLUMN is_demo INTEGER NOT NULL DEFAULT 0 CHECK (is_demo IN (0, 1))`
+  and the same on `budgets`. It marks the sample data loaded from Settings, so it is clearly identifiable and can be removed
+  without touching the user's own data. Existing rows get 0. The flag is local only: it is never sent to the server.
+  A phone that already has version-1 data is upgraded in place (tested with real data).
 
 ## Rules
 

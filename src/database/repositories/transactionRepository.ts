@@ -17,6 +17,7 @@ export interface TransactionRow {
   created_at: string;
   updated_at: string;
   sync_status: SyncStatus;
+  is_demo: number;
 }
 
 export function toTransaction(row: TransactionRow): Transaction {
@@ -32,6 +33,7 @@ export function toTransaction(row: TransactionRow): Transaction {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     syncStatus: row.sync_status,
+    isDemo: row.is_demo === 1,
   };
 }
 
@@ -59,8 +61,8 @@ export async function insertTransaction(db: Db, transaction: Transaction): Promi
   await db.runAsync(
     `INSERT INTO transactions
        (id, title, amount_minor, currency, type, category_id, description,
-        occurred_at, created_at, updated_at, sync_status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        occurred_at, created_at, updated_at, sync_status, is_demo)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       transaction.id,
       transaction.title,
@@ -73,6 +75,7 @@ export async function insertTransaction(db: Db, transaction: Transaction): Promi
       transaction.createdAt,
       transaction.updatedAt,
       transaction.syncStatus,
+      transaction.isDemo ? 1 : 0,
     ],
   );
 }

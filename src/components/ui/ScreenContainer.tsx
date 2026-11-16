@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
+import { RefreshControl, ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/hooks/useTheme';
@@ -13,6 +13,8 @@ interface ScreenContainerProps {
    * and the bottom (tab bar), so tab screens pass [] while other screens keep ['bottom'].
    */
   edges?: Edge[];
+  /** Pull-to-refresh (only with `scroll`). */
+  refresh?: { refreshing: boolean; onRefresh: () => void };
   style?: StyleProp<ViewStyle>;
 }
 
@@ -20,6 +22,7 @@ export function ScreenContainer({
   children,
   scroll = false,
   edges = ['bottom'],
+  refresh,
   style,
 }: ScreenContainerProps) {
   const { colors, spacing } = useTheme();
@@ -28,7 +31,21 @@ export function ScreenContainer({
   return (
     <SafeAreaView edges={edges} style={{ flex: 1, backgroundColor: colors.background }}>
       {scroll ? (
-        <ScrollView contentContainerStyle={padding} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          testID="screen-scroll"
+          contentContainerStyle={padding}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            refresh ? (
+              <RefreshControl
+                refreshing={refresh.refreshing}
+                onRefresh={refresh.onRefresh}
+                colors={[colors.primary]}
+                tintColor={colors.primary}
+                progressBackgroundColor={colors.surface}
+              />
+            ) : undefined
+          }>
           {children}
         </ScrollView>
       ) : (

@@ -5,7 +5,12 @@ import { Controller, useForm } from 'react-hook-form';
 import { Pressable, View } from 'react-native';
 
 import { AppButton, AppInput, AppText, SegmentedControl } from '@/components/ui';
-import { CATEGORY_COLORS, CATEGORY_ICON_NAMES, getCategoryIcon } from '@/constants/categoryIcons';
+import {
+  CATEGORY_COLORS,
+  CATEGORY_ICON_NAMES,
+  SWATCH_CHECK_COLOR,
+  getCategoryIcon,
+} from '@/constants/categoryIcons';
 import { DataError } from '@/database/errors';
 import { useCategories } from '@/hooks/useCategories';
 import { useI18n } from '@/hooks/useI18n';
@@ -175,16 +180,16 @@ export function CategoryForm({ category, onSaved }: CategoryFormProps) {
                     accessibilityLabel={color}
                     accessibilityState={{ selected }}
                     style={{
-                      width: touchTarget - 8,
-                      height: touchTarget - 8,
-                      borderRadius: (touchTarget - 8) / 2,
+                      width: touchTarget,
+                      height: touchTarget,
+                      borderRadius: touchTarget / 2,
                       backgroundColor: color,
                       alignItems: 'center',
                       justifyContent: 'center',
                       borderWidth: selected ? 3 : 0,
                       borderColor: colors.text,
                     }}>
-                    {selected ? <Check color="#FFFFFF" size={20} /> : null}
+                    {selected ? <Check color={SWATCH_CHECK_COLOR} size={22} /> : null}
                   </Pressable>
                 );
               })}

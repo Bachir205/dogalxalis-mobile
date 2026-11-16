@@ -101,4 +101,18 @@ Verified in a sandbox (no phone): app `tsc` and Android bundle pass; 200 app tes
 compiled server answer real requests; a real end-to-end script (real API client + real sync engine + SQLite engine against
 the real server) passed, including a real server outage, a restart that kept the data, a second "phone" pulling everything,
 and a 409 refusal. The end-to-end script is not part of the delivered test suite.
-**Not yet tested:** the phone reaching the PC over Wi-Fi (firewall, `http://` in Expo Go), sync on the real device (checklist S1 to S10).
+Developer moved on to Phase 7; the phone checklist S1 to S10 (see `TEST_PLAN.md`) was not reported.
+
+## 2026-11-14, Phase 7 (final integration and polish)
+- Migration 2 (`is_demo` on transactions and budgets), demo data builder / loader / remover, `DemoCard` in Settings, "Demo" badges.
+- `useDataStatus`, `usePullToRefresh`, `SyncBanner`, `AppErrorBoundary` (exported as `ErrorBoundary` from the root layout).
+- Chips and color swatches raised to 48 dp; the one raw color moved to a named constant; About shows the version.
+- Audit result: before this phase each screen decided loading / error on its own, nothing could be pulled to refresh, and
+  chips were 40 dp. All fixed and covered by tests.
+- Test finding: the accessible-name sweep flagged React Navigation's bottom-tab buttons; they are named by their text content,
+  so the rule is "a label or visible text".
+
+Verified in a sandbox (no phone): `tsc --noEmit` passes, Android bundle builds, 232 app tests in 19 suites, the real
+end-to-end run against the real Express server passed again on schema version 2.
+**Not yet tested:** Phase 7 on the physical phone (checklist P1 to P10 in `TEST_PLAN.md`), and the visual appearance, which
+no automated test can judge (spacing, contrast, dark mode look).

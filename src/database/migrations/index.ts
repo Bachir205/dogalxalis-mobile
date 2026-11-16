@@ -23,8 +23,24 @@ async function migration001(db: Db, now: string): Promise<void> {
   }
 }
 
-/** Ordered list. To change the schema later, add version 2, never edit version 1. */
-export const MIGRATIONS: Migration[] = [{ version: 1, up: migration001 }];
+/**
+ * Migration 2: a flag that marks the sample ("demo") records, so they are clearly identifiable
+ * and can be removed without touching the user's own data. Existing rows get 0 (not demo).
+ */
+async function migration002(db: Db): Promise<void> {
+  await db.execAsync(
+    'ALTER TABLE transactions ADD COLUMN is_demo INTEGER NOT NULL DEFAULT 0 CHECK (is_demo IN (0, 1))',
+  );
+  await db.execAsync(
+    'ALTER TABLE budgets ADD COLUMN is_demo INTEGER NOT NULL DEFAULT 0 CHECK (is_demo IN (0, 1))',
+  );
+}
+
+/** Ordered list. To change the schema, add a new version; never edit one that has shipped. */
+export const MIGRATIONS: Migration[] = [
+  { version: 1, up: migration001 },
+  { version: 2, up: migration002 },
+];
 
 /**
  * Brings the database up to date. The schema version is stored in SQLite's `user_version`.

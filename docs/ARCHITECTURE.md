@@ -123,3 +123,21 @@ Repositories and migrations take a small `Db` interface (`src/database/types.ts`
 In Jest the same SQL runs on sql.js (pure-JavaScript SQLite) through `tests/setup/sqlJsDatabase.ts`, and the
 `expo-sqlite` module is replaced by an in-memory database that survives unmount/remount, so "close and reopen the
 app" is testable. Native-only behaviour (the real SQLite file on the phone) is covered by the manual checklist.
+
+## Final integration (Phase 7)
+
+- **One data status** (`useDataStatus`): screens that need categories, transactions and budgets show one loading state, one
+  error state and one "Try again" that reloads the three. A synchronization reloads silently, so it never flashes the spinner.
+- **Pull to refresh** (`usePullToRefresh`) on the dashboard, transactions list and budgets: with a server it runs a
+  synchronization, without one it re-reads the data saved on the phone.
+- **Sync banner** (`SyncBanner`): a one-line notice on the main screens when changes are waiting, the server is unreachable or
+  it refused something. Tap it to synchronize. It is hidden when everything is in sync or no server is configured.
+- **Demo data** (`src/services/demoData.ts`, `DemoCard` in Settings): 15 sample transactions and 4 budgets in the active currency
+  and language, stored through the normal repositories and marked `is_demo`. Chosen so all four budget statuses are visible
+  (Food 88% approaching, Transport 42% normal, Bills 100% reached, Entertainment 120% exceeded). "Demo" badge on every
+  marked record. Loading twice does nothing; removing deletes only marked records (soft delete, so the server is told too).
+- **Crash screen**: `ErrorBoundary` exported from the root layout (Expo Router) renders `AppErrorBoundary`, which works without
+  any provider because the crash may have happened inside one.
+- **Accessibility**: touch targets of at least 48 dp (chips, options, swatches, buttons), status never shown by color alone,
+  every button has an accessible name, errors are announced (`accessibilityLiveRegion`). The only raw color left in the
+  screens is the white check mark on a color swatch (`SWATCH_CHECK_COLOR`), because swatches look the same in both themes.

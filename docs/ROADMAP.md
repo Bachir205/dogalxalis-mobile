@@ -10,8 +10,8 @@ Legend: Done (verified) / Provided (code supplied, not yet run on a device) / Pl
 | 3 | Contexts (Theme, Preferences, Transactions, Budgets), Light/Dark/System, FR/EN switch, persistence | Provided and accepted (developer moved on to Phase 4); manual checklist T1 to T6 not reported |
 | 4 | SQLite, categories CRUD, transactions CRUD, search and filters, money utilities, dashboard | Provided and accepted (developer moved on to Phase 5); manual checklist D1 to D12 not reported |
 | 5 | Monthly budgets and calculations | Provided and accepted (developer moved on to Phase 6); manual checklist B1 to B10 not reported |
-| 6 | Express API, sync, offline retry | Provided: 200 app tests + 20 API tests + a real end-to-end run pass in a sandbox; phone test pending |
-| 7 | Final integration, empty/loading/error states, demo data button | Planned |
+| 6 | Express API, sync, offline retry | Provided and accepted (developer moved on to Phase 7); phone checklist S1 to S10 not reported |
+| 7 | Final integration, empty/loading/error states, demo data button | Provided: 232 app tests pass in a sandbox, phone test pending |
 | 8 | Tests, README, screenshots, GitHub | Planned |
 
 Out of scope for this edition: savings goals, recurring transactions, OCR, multi-account, bank sync,

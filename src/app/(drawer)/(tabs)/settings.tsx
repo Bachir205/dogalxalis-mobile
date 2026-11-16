@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 
+import { DemoCard } from '@/components/settings/DemoCard';
 import { SyncCard } from '@/components/settings/SyncCard';
 import { AppCard, AppText, ScreenContainer, SegmentedControl } from '@/components/ui';
 import { CURRENCIES, CURRENCY_CODES } from '@/constants/currencies';
@@ -70,6 +71,8 @@ export default function SettingsScreen() {
       </AppCard>
 
       <SyncCard />
+
+      <DemoCard />
 
       <AppCard>
         <AppText variant="subtitle">{t('settings.appInfoTitle')}</AppText>

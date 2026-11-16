@@ -32,6 +32,8 @@ export interface Transaction {
   createdAt: string;
   updatedAt: string;
   syncStatus: SyncStatus;
+  /** True for the sample data loaded from Settings. Local only: it is never sent to the server. */
+  isDemo?: boolean;
 }
 
 export interface Budget {
@@ -44,6 +46,8 @@ export interface Budget {
   createdAt: string;
   updatedAt: string;
   syncStatus: SyncStatus;
+  /** True for the sample data loaded from Settings. Local only. */
+  isDemo?: boolean;
 }
 
 /** The fields a user supplies when creating a transaction. */

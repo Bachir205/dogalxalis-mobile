@@ -21,7 +21,7 @@ export function Chip({ label, selected, onPress, icon: Icon }: ChipProps) {
       accessibilityLabel={label}
       accessibilityState={{ selected }}
       style={{
-        minHeight: touchTarget - 8,
+        minHeight: touchTarget,
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.xs,

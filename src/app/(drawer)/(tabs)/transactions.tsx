@@ -3,6 +3,7 @@ import { ArrowLeftRight, Plus, ReceiptText } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { FlatList, ScrollView, View } from 'react-native';
 
+import { SyncBanner } from '@/components/sync/SyncBanner';
 import { TransactionCard } from '@/components/transactions/TransactionCard';
 import {
   AppButton,
@@ -17,7 +18,9 @@ import {
 } from '@/components/ui';
 import { getCategoryIcon } from '@/constants/categoryIcons';
 import { useCategories } from '@/hooks/useCategories';
+import { useDataStatus } from '@/hooks/useDataStatus';
 import { useI18n } from '@/hooks/useI18n';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useTheme } from '@/hooks/useTheme';
 import { useTransactions } from '@/hooks/useTransactions';
 import { getCategoryName } from '@/utils/categories';
@@ -37,7 +40,9 @@ export default function TransactionsScreen() {
   const { t } = useI18n();
   const { spacing } = useTheme();
   const router = useRouter();
-  const { transactions, status, refresh } = useTransactions();
+  const { transactions } = useTransactions();
+  const { status, refresh } = useDataStatus();
+  const pullToRefresh = usePullToRefresh();
   const { categories, categoriesById } = useCategories();
   const [filters, setFilters] = useState<TransactionFilters>(DEFAULT_FILTERS);
 
@@ -47,7 +52,7 @@ export default function TransactionsScreen() {
     [transactions, filters],
   );
 
-  if (status === 'loading' || status === 'idle') return <LoadingState />;
+  if (status === 'loading') return <LoadingState />;
   if (status === 'error') return <ErrorState message={t('errors.loadFailed')} onRetry={refresh} />;
 
   const update = (changes: Partial<TransactionFilters>) =>
@@ -66,6 +71,7 @@ export default function TransactionsScreen() {
 
   const header = (
     <View style={{ gap: spacing.md, paddingBottom: spacing.md }}>
+      <SyncBanner />
       <AppInput
         label={t('transactions.searchLabel')}
         placeholder={t('transactions.searchPlaceholder')}
@@ -138,6 +144,9 @@ export default function TransactionsScreen() {
   return (
     <View style={{ flex: 1 }}>
       <FlatList
+        testID="transactions-list"
+        refreshing={pullToRefresh.refreshing}
+        onRefresh={pullToRefresh.onRefresh}
         data={visible}
         keyExtractor={(item) => item.id}
         keyboardShouldPersistTaps="handled"

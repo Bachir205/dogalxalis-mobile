@@ -1,3 +1,5 @@
+import Constants from 'expo-constants';
+
 import { AppCard, AppText, ScreenContainer } from '@/components/ui';
 import { useI18n } from '@/hooks/useI18n';
 
@@ -8,6 +10,9 @@ export default function AboutScreen() {
   return (
     <ScreenContainer scroll>
       <AppText variant="title">{t('app.name')}</AppText>
+      <AppText variant="caption" tone="muted">
+        {t('drawer.version', { version: Constants.expoConfig?.version ?? '1.0.0' })}
+      </AppText>
       <AppText>{t('about.description')}</AppText>
 
       <AppCard>

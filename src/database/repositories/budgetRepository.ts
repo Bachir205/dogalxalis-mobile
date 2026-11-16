@@ -15,6 +15,7 @@ export interface BudgetRow {
   created_at: string;
   updated_at: string;
   sync_status: SyncStatus;
+  is_demo: number;
 }
 
 export function toBudget(row: BudgetRow): Budget {
@@ -27,6 +28,7 @@ export function toBudget(row: BudgetRow): Budget {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     syncStatus: row.sync_status,
+    isDemo: row.is_demo === 1,
   };
 }
 
@@ -54,8 +56,8 @@ export async function insertBudget(db: Db, budget: Budget): Promise<void> {
   try {
     await db.runAsync(
       `INSERT INTO budgets
-         (id, category_id, amount_minor, currency, month, created_at, updated_at, sync_status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+         (id, category_id, amount_minor, currency, month, created_at, updated_at, sync_status, is_demo)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         budget.id,
         budget.categoryId,
@@ -65,6 +67,7 @@ export async function insertBudget(db: Db, budget: Budget): Promise<void> {
         budget.createdAt,
         budget.updatedAt,
         budget.syncStatus,
+        budget.isDemo ? 1 : 0,
       ],
     );
   } catch (error) {

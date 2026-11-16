@@ -5,6 +5,7 @@ import { View } from 'react-native';
 
 import { BudgetOverviewCard } from '@/components/budgets/BudgetOverviewCard';
 import { CategoryBadge } from '@/components/categories/CategoryBadge';
+import { SyncBanner } from '@/components/sync/SyncBanner';
 import { SummaryCard } from '@/components/dashboard/SummaryCard';
 import { TransactionCard } from '@/components/transactions/TransactionCard';
 import {
@@ -18,7 +19,9 @@ import {
   SegmentedControl,
 } from '@/components/ui';
 import { useCategories } from '@/hooks/useCategories';
+import { useDataStatus } from '@/hooks/useDataStatus';
 import { useI18n } from '@/hooks/useI18n';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { usePreferences } from '@/hooks/usePreferences';
 import { useTheme } from '@/hooks/useTheme';
 import { useTransactions } from '@/hooks/useTransactions';
@@ -41,7 +44,9 @@ export default function HomeScreen() {
   const { colors, spacing, radius } = useTheme();
   const router = useRouter();
   const { currency } = usePreferences();
-  const { transactions, status, refresh } = useTransactions();
+  const { transactions } = useTransactions();
+  const { status, refresh } = useDataStatus();
+  const pullToRefresh = usePullToRefresh();
   const { categoriesById } = useCategories();
   const [period, setPeriod] = useState<Period>('month');
 
@@ -58,7 +63,7 @@ export default function HomeScreen() {
   );
   const recent = useMemo(() => sortTransactions(transactions).slice(0, RECENT_COUNT), [transactions]);
 
-  if (status === 'loading' || status === 'idle') return <LoadingState />;
+  if (status === 'loading') return <LoadingState />;
   if (status === 'error') return <ErrorState message={t('errors.loadFailed')} onRetry={refresh} />;
 
   const money = (minor: number, sign = false) => formatMinor(minor, currency, language, { sign });
@@ -70,7 +75,8 @@ export default function HomeScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScreenContainer scroll edges={[]}>
+      <ScreenContainer scroll edges={[]} refresh={pullToRefresh}>
+        <SyncBanner />
         <SegmentedControl<Period>
           accessibilityLabel={t('home.periodLabel')}
           options={periodOptions}

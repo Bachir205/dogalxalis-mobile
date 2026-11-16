@@ -4,6 +4,7 @@ import { View } from 'react-native';
 
 import { BudgetCard } from '@/components/budgets/BudgetCard';
 import { SummaryCard } from '@/components/dashboard/SummaryCard';
+import { SyncBanner } from '@/components/sync/SyncBanner';
 import {
   AppButton,
   EmptyState,
@@ -15,8 +16,10 @@ import {
 } from '@/components/ui';
 import { useBudgets } from '@/hooks/useBudgets';
 import { useCategories } from '@/hooks/useCategories';
+import { useDataStatus } from '@/hooks/useDataStatus';
 import { useI18n } from '@/hooks/useI18n';
 import { usePreferences } from '@/hooks/usePreferences';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useTheme } from '@/hooks/useTheme';
 import { formatMinor } from '@/utils/money';
 
@@ -27,9 +30,11 @@ export default function BudgetsScreen() {
   const router = useRouter();
   const { currency } = usePreferences();
   const { categoriesById } = useCategories();
-  const { summaries, totals, selectedMonth, goToPreviousMonth, goToNextMonth, status, refresh } = useBudgets();
+  const { summaries, totals, selectedMonth, goToPreviousMonth, goToNextMonth } = useBudgets();
+  const { status, refresh } = useDataStatus();
+  const pullToRefresh = usePullToRefresh();
 
-  if (status === 'loading' || status === 'idle') return <LoadingState />;
+  if (status === 'loading') return <LoadingState />;
   if (status === 'error') return <ErrorState message={t('errors.loadFailed')} onRetry={refresh} />;
 
   const money = (minor: number) => formatMinor(minor, currency, language);
@@ -37,7 +42,8 @@ export default function BudgetsScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScreenContainer scroll edges={[]}>
+      <ScreenContainer scroll edges={[]} refresh={pullToRefresh}>
+        <SyncBanner />
         <MonthSwitcher month={selectedMonth} onPrevious={goToPreviousMonth} onNext={goToNextMonth} />
 
         <View style={{ flexDirection: 'row', gap: spacing.md }}>

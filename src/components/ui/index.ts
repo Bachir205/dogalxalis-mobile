@@ -4,6 +4,7 @@ export { AppInput } from './AppInput';
 export { AppText } from './AppText';
 export { Chip } from './Chip';
 export { confirmAction } from './confirm';
+export { DemoBadge } from './DemoBadge';
 export { EmptyState } from './EmptyState';
 export { ErrorState } from './ErrorState';
 export { FloatingActionButton } from './FloatingActionButton';

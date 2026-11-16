@@ -149,6 +149,36 @@ Manual (Manual-pending). First do the connection test: the phone's browser must 
 | S9 | Send the app to the background and bring it back | A sync starts (check the API console) |
 | S10 | French labels in the Synchronization card and badges; dark mode | Yes |
 
+## Final integration (Phase 7)
+
+Automated: app `npm test` (232 tests, 19 suites).
+
+| # | Case | Status |
+|---|---|---|
+| P-a | Migration 2 upgrades a version-1 database that holds real data (data kept, flag = 0); the flag only accepts 0 and 1 | Automated-pass |
+| P-b | Demo data builder: valid, marked, unique ids, category rules hold, valid dates, never in the future, all four budget statuses in XOF, EUR and USD, exact amounts, titles in both languages | Automated-pass |
+| P-c | Demo data in SQLite: loads once (no duplicates), skips a budget that duplicates the user's own, active currency, removal touches only marked records, can be loaded again, is sent to the server and removed there | Automated-pass |
+| P-d | Settings flow on the real screens: load, success message, four budget statuses with Demo badges, remove with confirmation, the user's own data kept; in French with EUR | Automated-pass |
+| P-e | Sync banner appears offline with the waiting count, tapping it synchronizes and it disappears; absent with no server and when in sync | Automated-pass |
+| P-f | Pull to refresh: synchronizes with a server, re-reads the phone data without one | Automated-pass |
+| P-g | A failed read shows the error state with "Try again" and recovers; the crash screen works alone, in the device language, with a working retry | Automated-pass |
+| P-h | Touch targets at least 48 dp; no raw translation key or unfilled placeholder on any screen in English and French; every button has an accessible name | Automated-pass |
+
+Manual on the Android phone (Manual-pending). This is also the presentation rehearsal:
+
+| # | Case | Expected |
+|---|---|---|
+| P1 | Settings, Load demo data | Dashboard fills in; Budgets shows Approaching limit, Normal, Budget reached, Budget exceeded; every sample item has a "Demo" tag |
+| P2 | Add your own transaction, then Remove demo data | Only the Demo items disappear; yours stays |
+| P3 | Switch to Francais and then dark mode, visit every screen and every form | Nothing cut off, readable contrast, no English left, no white areas |
+| P4 | Stop the API, add data, look at the Home and Transactions tabs | Banner "Offline. Changes waiting to be sent: N"; tapping it tries again |
+| P5 | Pull down on Home, Transactions and Budgets | The spinner appears and disappears; data is up to date |
+| P6 | Increase the phone's font size in Android settings, reopen the app | Text stays readable and buttons are not cut off |
+| P7 | Turn on TalkBack and visit Home, Transactions, Budgets | Cards and buttons are read with a meaningful name |
+| P8 | Rotate the phone | The app stays in portrait (landscape is not supported) |
+| P9 | Force-close and reopen several times | No flash of the wrong theme or language; data intact |
+| P10 | Run the whole demo from `README` in Phase 8 | No surprise |
+
 ## Later phases
 
-Final integration (Phase 7), README, screenshots and GitHub (Phase 8): Planned.
+README, screenshots, final checks and GitHub (Phase 8): Planned.

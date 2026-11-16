@@ -51,3 +51,6 @@ export const CATEGORY_COLORS = [
 ] as const;
 
 export const DEFAULT_CATEGORY_COLOR = '#7F8C8D';
+
+/** The check mark on a selected color swatch. The swatches look the same in both themes, so this is fixed. */
+export const SWATCH_CHECK_COLOR = '#FFFFFF';

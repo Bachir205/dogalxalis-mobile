@@ -118,6 +118,236 @@
       "updatedAt": "2026-11-14T12:19:24.016Z"
     }
   ],
-  "transactions": [],
-  "budgets": []
+  "transactions": [
+    {
+      "id": "0cf58266-7529-4636-bc42-10c0dada31b3",
+      "title": "Saturday food",
+      "amountMinor": 3000,
+      "currency": "XOF",
+      "type": "expense",
+      "categoryId": "cat_food",
+      "description": null,
+      "date": "2026-11-15",
+      "createdAt": "2026-11-15T12:24:35.740Z",
+      "updatedAt": "2026-11-15T12:24:35.740Z"
+    },
+    {
+      "id": "654462d6-deb5-49c6-be0e-3e47d207a138",
+      "title": "Monthly salary",
+      "amountMinor": 250000,
+      "currency": "XOF",
+      "type": "income",
+      "categoryId": "cat_salary",
+      "description": null,
+      "date": "2026-11-01",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    },
+    {
+      "id": "75d91f25-37ef-408c-8509-f1b357a24481",
+      "title": "Freelance project",
+      "amountMinor": 60000,
+      "currency": "XOF",
+      "type": "income",
+      "categoryId": "cat_freelance",
+      "description": null,
+      "date": "2026-11-08",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    },
+    {
+      "id": "942c4802-b9ae-467e-a0f2-fa037748da1d",
+      "title": "Groceries",
+      "amountMinor": 38000,
+      "currency": "XOF",
+      "type": "expense",
+      "categoryId": "cat_food",
+      "description": null,
+      "date": "2026-11-02",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    },
+    {
+      "id": "68ac50b5-e93c-4ff6-ac09-ad5ed39c2f8f",
+      "title": "Restaurant",
+      "amountMinor": 9000,
+      "currency": "XOF",
+      "type": "expense",
+      "categoryId": "cat_food",
+      "description": null,
+      "date": "2026-11-06",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    },
+    {
+      "id": "243d3d43-7fd1-4dcb-86c4-cdc57f23eace",
+      "title": "Market",
+      "amountMinor": 6000,
+      "currency": "XOF",
+      "type": "expense",
+      "categoryId": "cat_food",
+      "description": null,
+      "date": "2026-11-14",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    },
+    {
+      "id": "59ab4afc-e6fa-4e0f-9396-5a47b6dc82d8",
+      "title": "Taxi",
+      "amountMinor": 12000,
+      "currency": "XOF",
+      "type": "expense",
+      "categoryId": "cat_transport",
+      "description": null,
+      "date": "2026-11-03",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    },
+    {
+      "id": "f58d31cb-49f2-41a7-957a-34115b400288",
+      "title": "Fuel",
+      "amountMinor": 5000,
+      "currency": "XOF",
+      "type": "expense",
+      "categoryId": "cat_transport",
+      "description": null,
+      "date": "2026-11-12",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    },
+    {
+      "id": "de4bceda-a83f-41ad-b8dc-4c1750dea9ed",
+      "title": "Electricity bill",
+      "amountMinor": 20000,
+      "currency": "XOF",
+      "type": "expense",
+      "categoryId": "cat_bills",
+      "description": null,
+      "date": "2026-11-07",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    },
+    {
+      "id": "0d51655e-2e89-4601-b811-3e40cc11fcd1",
+      "title": "Internet",
+      "amountMinor": 15000,
+      "currency": "XOF",
+      "type": "expense",
+      "categoryId": "cat_bills",
+      "description": null,
+      "date": "2026-11-09",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    },
+    {
+      "id": "e0d710b7-c108-48d5-8a70-ae7dff61d487",
+      "title": "Cinema",
+      "amountMinor": 12000,
+      "currency": "XOF",
+      "type": "expense",
+      "categoryId": "cat_entertainment",
+      "description": null,
+      "date": "2026-11-11",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    },
+    {
+      "id": "a8711e87-1c4b-4f85-81d3-ca7de82c9558",
+      "title": "Video game",
+      "amountMinor": 18000,
+      "currency": "XOF",
+      "type": "expense",
+      "categoryId": "cat_entertainment",
+      "description": null,
+      "date": "2026-11-16",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    },
+    {
+      "id": "9a86f01a-67d2-475a-9398-b323fbc4b56f",
+      "title": "Pharmacy",
+      "amountMinor": 8000,
+      "currency": "XOF",
+      "type": "expense",
+      "categoryId": "cat_health",
+      "description": null,
+      "date": "2026-11-15",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    },
+    {
+      "id": "389d45fb-1bbb-463f-9bff-1091ccaae85a",
+      "title": "Monthly salary",
+      "amountMinor": 250000,
+      "currency": "XOF",
+      "type": "income",
+      "categoryId": "cat_salary",
+      "description": null,
+      "date": "2026-10-01",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    },
+    {
+      "id": "a3f6508a-b406-4b83-9326-d1af8015ece8",
+      "title": "Groceries",
+      "amountMinor": 41000,
+      "currency": "XOF",
+      "type": "expense",
+      "categoryId": "cat_food",
+      "description": null,
+      "date": "2026-10-10",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    },
+    {
+      "id": "21785498-4705-4c58-baaf-425a095d2a2e",
+      "title": "Taxi",
+      "amountMinor": 9000,
+      "currency": "XOF",
+      "type": "expense",
+      "categoryId": "cat_transport",
+      "description": null,
+      "date": "2026-10-20",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    }
+  ],
+  "budgets": [
+    {
+      "id": "81158cdc-c265-4b8f-a618-26bc6f15ba7a",
+      "categoryId": "cat_transport",
+      "amountMinor": 2000,
+      "currency": "XOF",
+      "month": "2026-11",
+      "createdAt": "2026-11-15T12:23:50.419Z",
+      "updatedAt": "2026-11-15T12:23:50.419Z"
+    },
+    {
+      "id": "28401937-f645-486b-9376-cc0a7764a785",
+      "categoryId": "cat_food",
+      "amountMinor": 60000,
+      "currency": "XOF",
+      "month": "2026-11",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    },
+    {
+      "id": "b6983daa-38fd-4924-80a1-af766421c724",
+      "categoryId": "cat_bills",
+      "amountMinor": 35000,
+      "currency": "XOF",
+      "month": "2026-11",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    },
+    {
+      "id": "267b62f4-403e-4254-885c-5e57fefd876a",
+      "categoryId": "cat_entertainment",
+      "amountMinor": 25000,
+      "currency": "XOF",
+      "month": "2026-11",
+      "createdAt": "2026-11-16T01:09:51.726Z",
+      "updatedAt": "2026-11-16T01:09:51.726Z"
+    }
+  ]
 }

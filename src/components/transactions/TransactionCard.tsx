@@ -2,7 +2,7 @@ import { Pressable, View } from 'react-native';
 
 import { CategoryBadge } from '@/components/categories/CategoryBadge';
 import { SyncBadge } from '@/components/sync/SyncBadge';
-import { AppText } from '@/components/ui';
+import { AppText, DemoBadge } from '@/components/ui';
 import { useI18n } from '@/hooks/useI18n';
 import { useTheme } from '@/hooks/useTheme';
 import type { Category, Transaction } from '@/types';
@@ -53,6 +53,7 @@ export function TransactionCard({ transaction, category, onPress }: TransactionC
           {categoryName} · {date}
         </AppText>
         <SyncBadge status={transaction.syncStatus} />
+        <DemoBadge isDemo={transaction.isDemo} />
       </View>
       <AppText style={{ color: isIncome ? colors.income : colors.expense, fontWeight: '700' }}>
         {amount}
